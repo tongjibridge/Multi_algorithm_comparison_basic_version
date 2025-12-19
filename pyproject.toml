@@ -1,0 +1,53 @@
+[project]
+name = "multi-algorithm-comparison-basic-version"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "autogluon>=1.4.0",
+    "catboost==1.2.7",
+    "category-encoders>=2.7.0",
+    "cmaes>=0.12.0",
+    "einops>=0.8.1",
+    "gradio>=5.48.0",
+    "hpelm==1.0.10",
+    "ipykernel>=6.30.1",
+    "lightgbm>=4.6.0",
+    "networkx>=3.4.2",
+    "numpy==1.26.4",
+    "openpyxl>=3.1.5",
+    "optuna>=4.4.0",
+    "overrides>=7.7.0",
+    "pandas==2.2.2",
+    "pyale>=1.2.0",
+    "pygam",
+    "scikit-learn==1.5.1",
+    "scipy==1.13.1",
+    "seaborn>=0.13.2",
+    "shap==0.42.1",
+    "tabpfn>=2.2.1",
+    "tabpfn-extensions>=0.2.0",
+    "xgboost==2.0.0",
+]
+[project.optional-dependencies]
+
+cu113 = [
+  "torch==1.12.1",
+  "torchvision==0.13.1",
+]
+
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu113", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+  { index = "pytorch-cu113", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu113"
+url = "https://download.pytorch.org/whl/cu113"
+explicit = true
+
