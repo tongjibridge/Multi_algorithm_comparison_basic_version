@@ -1,4 +1,3 @@
-
 # Multi_algorithm_comparison_basic_version
 
 本项目旨在比较多种机器学习算法在特定数据集或任务上的性能，以便研究人员和开发者能够快速了解各算法在不同场景下的优劣。
@@ -13,7 +12,20 @@
 
 ## 文件说明
 
-- `CatBoost.py`, `DT.py`, `KNN.py`, `LightGBM-optuna.py`, `RF.py`, `SVR.py`：不同机器学习模型的实现文件，包含调参函数 `objective`。
+- **不同机器学习模型的实现文件，包含调参函数 `objective`**：
+  - `CatBoost.py`：CatBoost 回归模型实现
+  - `DT.py`：决策树回归模型实现
+  - `KNN.py`：K近邻回归模型实现
+  - `LightGBM-optuna.py`：LightGBM 回归模型实现（使用 Optuna 调参）
+  - `RF.py`：随机森林回归模型实现
+  - `SVR.py`：支持向量回归模型实现
+  - `GBR.py`：梯度提升回归模型实现
+  - `MLP.py`：多层感知器回归模型实现
+  - `elm.py`：极限学习机回归模型实现
+  - `xrfm_reg.py`：XRFM 回归模型实现
+  - `tabm_reg.py`：TabM 回归模型实现
+  - `tabpfn_reg.py`：TabPFN 回归模型实现
+  - `bay.py`：贝叶斯回归模型实现
 - `corr.py`：用于分析数据集特征之间的相关性，包括连续变量、离散变量和多共线性分析。
 - `tools.py`：提供多种可视化和预处理工具函数，如数据标准化、SHAP 可视化、残差图绘制等。
 - `paras_read.py`：用于提取最优模型参数。
@@ -25,6 +37,7 @@
 
 该项目可能依赖以下库，请确保安装以下 Python 包：
 建议优先使用uv进行环境管理
+
 ```bash
 pip install optuna scikit-learn pandas numpy matplotlib seaborn lightgbm catboost shap
 ```
@@ -40,6 +53,4 @@ pip install optuna scikit-learn pandas numpy matplotlib seaborn lightgbm catboos
 
 本项目使用 [MIT License](LICENSE)，请在使用前确认遵循该许可协议。
 
---- 
-
-请根据实际项目内容进一步补充和修改该 README 文件。
+---
