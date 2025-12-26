@@ -688,7 +688,7 @@ for feature_name in top_features_pdp_names:
     shap.dependence_plot(
         feature_name,
         shap_values.values,
-        X_test_scaled_df,
+        x_test,
         interaction_index="auto",
         show=False,
     )
@@ -753,7 +753,7 @@ selected_theme_id = 11
 cmap_name = COLOR_THEMES.get(selected_theme_id, "coolwarm")
 create_and_save_summary_plot(
     shap_values=shap_values.values,
-    X_test=X_test_scaled_df,
+    X_test=x_test,
     title="SHAP Summary",
     cmap_name=cmap_name,
     output_folder=shap_custom_save_dir,
@@ -762,7 +762,7 @@ create_and_save_summary_plot(
 )
 create_and_save_top_dependence_plots(
     shap_values=shap_values.values,
-    X_test=X_test_scaled_df,
+    X_test=x_test,
     cmap_name=cmap_name,
     output_folder=shap_custom_save_dir,
     selected_theme_id=selected_theme_id,
@@ -770,7 +770,7 @@ create_and_save_top_dependence_plots(
 create_and_save_interaction_heatmap(
     shap_values=shap_values.values,
     shap_interaction_values=shap_interaction_values,
-    X_test=X_test_scaled_df,
+    X_test=x_test,
     title="SHAP Interaction",
     cmap_name=cmap_name,
     output_folder=shap_custom_save_dir,
@@ -779,7 +779,7 @@ create_and_save_interaction_heatmap(
 )
 create_and_save_top_interaction_dependence_plots(
     shap_interaction_values=shap_interaction_values,
-    X_test=X_test_scaled_df,
+    X_test=x_test,
     title="SHAP Interaction Dependence Plots",
     cmap_name=cmap_name,
     output_folder=shap_custom_save_dir,

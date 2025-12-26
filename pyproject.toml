@@ -5,7 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "autogluon>=1.4.0",
     "catboost==1.2.7",
     "category-encoders>=2.7.0",
     "cmaes>=0.12.0",
