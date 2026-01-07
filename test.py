@@ -1,15 +1,22 @@
 # 读取test.xslx，以第一列为横坐标，第二列为纵坐标
-import pandas as pd
+class a:
+    def __init__(self, x, y, z, v):
+        self.z = z
+        self.v = v
+        self.x = x
+        self.y = y
 
-df = pd.read_excel("test.xlsx")
-x = df.iloc[:, 0]
-y = df.iloc[:, 1]
+    def sum(self):
+        return self.x + self.y + self.z + self.v
 
-# 用plt绘制散点图，坐标轴标签为每列的特征名
-import matplotlib.pyplot as plt
 
-plt.scatter(x, y)
-plt.xlabel(df.columns[0])
-plt.ylabel(df.columns[1])
-plt.title("Scatter Plot of x vs y")
-plt.show()
+paras1 = {
+    "x": 1,
+    "y": 2,
+}
+paras2 = {
+    "z": 3,
+    "v": 4,
+}
+obj = a(**paras1, **paras2)
+print(obj.sum())

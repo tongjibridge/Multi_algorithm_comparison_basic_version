@@ -134,7 +134,7 @@ logger.info(
     "-------------------------------------搜索最佳超参数---------------------------------------"
 )
 # 实例化GridSearchCV对象，用于自动寻找最佳超参数组合
-sampler = optuna.samplers.CmaEsSampler()
+sampler = optuna.samplers.TPESampler()
 study = optuna.create_study(direction="minimize", sampler=sampler)  # 最小化MAE
 
 study.optimize(objective, n_trials=100, show_progress_bar=True)
@@ -174,9 +174,12 @@ x_test = encoder.transform(x_test)
 feature_names_from_df = x_train.columns.tolist()  # 获取特征名称列表
 
 X_train_scaled_df, X_test_scaled_df = data_norm_get(
-    x_train, x_test, y_train, y_test, non_standardize_features=non_standardize_features
+    x_train,
+    x_test,
+    y_train,
+    y_test,
+    non_standardize_features=non_standardize_features,
 )
-
 
 best_model = DecisionTreeRegressor(**study.best_params, random_state=42)
 best_model.fit(X_train_scaled_df, y_train)

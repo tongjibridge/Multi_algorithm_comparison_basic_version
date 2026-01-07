@@ -141,3 +141,5 @@ cython_debug/
 result/
 savemodel/
 back/
+data/
+catboost_info/

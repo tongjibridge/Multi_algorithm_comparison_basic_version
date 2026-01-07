@@ -26,11 +26,13 @@ import optuna
 from sklearn.model_selection import KFold
 import logging
 from tools import (
-    plot_regression_fit,
+    plot_regression_fit2,
     plot_importance_combined,
     plot_residuals_styled,
     data_norm_get,
 )
+from encode import encode_database
+import pickle
 
 # --- 全局设置 ---
 # 忽略特定类型的警告，避免在输出中显示不必要的警告信息
@@ -75,8 +77,16 @@ def objective(trial):
     for train_index, test_index in kf.split(y):
         x_train, x_test = x.iloc[train_index], x.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        x_train, encoder, categorical_feature_names = encode_database(
+            x_train, y_train, categorical_columns
+        )
+        x_test = encoder.transform(x_test)
         X_train_scaled_df, X_test_scaled_df = data_norm_get(
-            x_train, x_test, y_train, y_test
+            x_train,
+            x_test,
+            y_train,
+            y_test,
+            non_standardize_features=non_standardize_features,
         )
 
         model = MLPRegressor(**param_grid, random_state=42)
@@ -95,11 +105,28 @@ logger.info(
 )
 # 从指定的Excel文件中读取数据
 # 注意：请确保文件路径正确无误
-df = pd.read_excel(r"./fpr筋机器学习预处理.xlsx")
+df = pd.read_excel(r"./database2.xlsx")
+df.columns = [
+    "FRP fiber type",
+    "FRP fiber surface type",
+    "Processing time",
+    "Temperature",
+    "Elastic modulus of FRP fiber",
+    "fcu",
+    "l",
+    "d",
+    "c",
+    "τu",
+]
+# catboost编码
+categorical_columns = [0, 1]
+non_standardize_features = ["FRP fiber type", "FRP fiber surface type"]
+# one-hot编码
+# non_standardize_features = ["B", "C", "G", "带肋", "黏砂", "光圆"]
 
 y = df.iloc[:, -1]  # 提取最后一列作为目标变量y
 x = df.iloc[:, :-1]  # 提取从第二列开始的所有列作为特征变量x
-feature_names_from_df = x.columns.tolist()  # 获取特征名称列表
+
 
 logger.info(
     "-------------------------------------划分数据集---------------------------------------"
@@ -121,7 +148,7 @@ logger.info(
     "-------------------------------------搜索最佳超参数---------------------------------------"
 )
 # 实例化GridSearchCV对象，用于自动寻找最佳超参数组合
-sampler = optuna.samplers.CmaEsSampler()
+sampler = optuna.samplers.TPESampler()
 study = optuna.create_study(direction="minimize", sampler=sampler)  # 最小化MAE
 
 study.optimize(objective, n_trials=100, show_progress_bar=True)
@@ -137,7 +164,7 @@ logger.info("最佳MAE:", study.best_value)
 logger.info(
     "-------------------------------------保存最佳模型---------------------------------------"
 )
-model_save_dir = r"./savemodel/MLP/"  # 定义模型保存的目录
+model_save_dir = r"./savemodel/MLP2/"  # 定义模型保存的目录
 os.makedirs(model_save_dir, exist_ok=True)  # 创建目录，如果目录已存在则不报错
 # --- 【MLP 修改】 ---
 model_path = os.path.join(
@@ -152,7 +179,20 @@ index = kf.split(y)
 train_index, test_index = next(index)
 x_train, x_test = x.iloc[train_index], x.iloc[test_index]
 y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-X_train_scaled_df, X_test_scaled_df = data_norm_get(x_train, x_test, y_train, y_test)
+x_train, encoder, categorical_feature_names = encode_database(
+    x_train, y_train, categorical_columns
+)
+x_test = encoder.transform(x_test)
+
+feature_names_from_df = x_train.columns.tolist()  # 获取特征名称列表
+joblib.dump(encoder, os.path.join(model_save_dir, "encoder.pkl"))
+X_train_scaled_df, X_test_scaled_df = data_norm_get(
+    x_train,
+    x_test,
+    y_train,
+    y_test,
+    non_standardize_features=non_standardize_features,
+)
 
 
 best_model = MLPRegressor(**study.best_params, random_state=42)
@@ -163,26 +203,8 @@ logger.info(
 y_test_pred = best_model.predict(X_test_scaled_df)  # 使用加载的模型对测试集进行预测
 y_train_pred = best_model.predict(X_train_scaled_df)  # 使用加载的模型对训练集进行预测
 
-results_plot_save_dir = r"./result/MLP/"  # 定义结果图保存的目录
+results_plot_save_dir = r"./result/MLP2/"  # 定义结果图保存的目录
 os.makedirs(results_plot_save_dir, exist_ok=True)  # 创建目录，如果目录已存在则不报错
-# 将数据写入xlsx表格，其中X_train_scaled_df、y_train、y_train_pred在train表格，X_test_scaled_df、y_test、y_test_pred在test表格
-train_df = pd.concat([X_train_scaled_df, y_train, pd.Series(y_train_pred)], axis=1)
-train_df.columns = feature_names_from_df + ["y_train", "y_train_pred"]
-test_df = pd.concat([X_test_scaled_df, y_test, pd.Series(y_test_pred)], axis=1)
-test_df.columns = feature_names_from_df + ["y_test", "y_test_pred"]
-with pd.ExcelWriter(
-    os.path.join(results_plot_save_dir, "MLP_scaled_results.xlsx")
-) as writer:
-    train_df.to_excel(writer, sheet_name="train", index=False)
-    test_df.to_excel(writer, sheet_name="test", index=False)
-# 保存未缩放的数据
-train_df = pd.concat([x_train, y_train, pd.Series(y_train_pred)], axis=1)
-train_df.columns = feature_names_from_df + ["y_train", "y_train_pred"]
-test_df = pd.concat([x_test, y_test, pd.Series(y_test_pred)], axis=1)
-test_df.columns = feature_names_from_df + ["y_test", "y_test_pred"]
-with pd.ExcelWriter(os.path.join(results_plot_save_dir, "MLP_results.xlsx")) as writer:
-    train_df.to_excel(writer, sheet_name="train", index=False)
-    test_df.to_excel(writer, sheet_name="test", index=False)
 
 
 logger.info(
@@ -220,7 +242,7 @@ test_path = os.path.join(
     results_plot_save_dir, "MLP_验证集精度_final.png"
 )  # 验证集拟合图的保存路径
 # 调用函数绘制训练集的拟合图
-plot_regression_fit(
+plot_regression_fit2(
     y_train,
     y_train_pred,
     train_r2,
@@ -231,7 +253,7 @@ plot_regression_fit(
     train_path,
 )
 # 调用函数绘制测试集的拟合图
-plot_regression_fit(
+plot_regression_fit2(
     y_test,
     y_test_pred,
     test_r2,

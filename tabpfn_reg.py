@@ -313,22 +313,22 @@ plot_residuals_styled(
     test_residuals, y_test_pred, test_res_path, "Test Set Residual Analysis of tabpfn"
 )
 
-# # =================================================================================
-# # ============ 使用手动计算方法绘制 PDP 和 ICE 相关图 (适用于tabpfn) ============
-# # =================================================================================
-# logger.info(
-#     "------------------------开始 PDP 和 ICE 相关绘图 (手动实现)------------------------"
-# )
-# # 定义PDP/ICE图的保存目录
-# # --- 【tabpfn 修改】 ---
-# pdp_ice_save_dir = os.path.join(results_plot_save_dir, "tabpfn_PDP_ICE_Plots_final")
-# os.makedirs(pdp_ice_save_dir, exist_ok=True)  # 创建目录
-# # 定义双变量PDP图的保存目录
-# pdp_2way_save_dir = os.path.join(pdp_ice_save_dir, "2Way_PDP_All_Combinations")
-# os.makedirs(pdp_2way_save_dir, exist_ok=True)  # 创建目录
-# # 定义3D PDP图的保存目录
-# pdp_3d_save_dir = os.path.join(pdp_ice_save_dir, "3D_PDP_All_Combinations")
-# os.makedirs(pdp_3d_save_dir, exist_ok=True)  # 创建目录
+# =================================================================================
+# ============ 使用手动计算方法绘制 PDP 和 ICE 相关图 (适用于tabpfn) ============
+# =================================================================================
+logger.info(
+    "------------------------开始 PDP 和 ICE 相关绘图 (手动实现)------------------------"
+)
+# 定义PDP/ICE图的保存目录
+# --- 【tabpfn 修改】 ---
+pdp_ice_save_dir = os.path.join(results_plot_save_dir, "tabpfn_PDP_ICE_Plots_final")
+os.makedirs(pdp_ice_save_dir, exist_ok=True)  # 创建目录
+# 定义双变量PDP图的保存目录
+pdp_2way_save_dir = os.path.join(pdp_ice_save_dir, "2Way_PDP_All_Combinations")
+os.makedirs(pdp_2way_save_dir, exist_ok=True)  # 创建目录
+# 定义3D PDP图的保存目录
+pdp_3d_save_dir = os.path.join(pdp_ice_save_dir, "3D_PDP_All_Combinations")
+os.makedirs(pdp_3d_save_dir, exist_ok=True)  # 创建目录
 
 n_top_features_for_pdp = 11  # 设置用于PDP分析的最重要特征的数量
 if n_top_features_for_pdp > len(
@@ -337,232 +337,232 @@ if n_top_features_for_pdp > len(
     n_top_features_for_pdp = len(feature_names_from_df)
 # 根据tabpfn原生重要性排序，选取最重要的N个特征
 top_features_pdp_names = perm_importance_df["Feature"].tolist()[:n_top_features_for_pdp]
-# # top_features_pdp_names = [
-# #     "筋直径",
-# #     "混凝土强度fcu",
-# #     "粘结长度 直径",
-# #     "钢纤维掺量",
-# #     "保护层厚度 直径",
-# # ]
-# plt.style.use("seaborn-v0_8-whitegrid")  # 设置绘图风格
-# plt.rc("font", family="Microsoft YaHei")  # 设置中文字体
+# top_features_pdp_names = [
+#     "筋直径",
+#     "混凝土强度fcu",
+#     "粘结长度 直径",
+#     "钢纤维掺量",
+#     "保护层厚度 直径",
+# ]
+plt.style.use("seaborn-v0_8-whitegrid")  # 设置绘图风格
+plt.rc("font", family="Microsoft YaHei")  # 设置中文字体
 
-# # --- 1. 绘制单变量 PDP (含置信区间) 和 ICE 组合图 ---
-# logger.info("\n开始绘制单变量 PDP (含95%置信区间) 和 ICE 组合图...")
-# # 遍历最重要的N个特征
-# for feature_name in top_features_pdp_names:
-#     logger.debug(f"正在计算特征 '{feature_name}' 的PDP/ICE数据...")
-#     try:
-#         # 使用手动编写的函数计算1D PDP和ICE数据
-#         grid_vals, pdp_vals, ice_lines_vals = manual_pdp_1d(
-#             best_model, X_train_scaled_df, feature_name
-#         )
+# --- 1. 绘制单变量 PDP (含置信区间) 和 ICE 组合图 ---
+logger.info("\n开始绘制单变量 PDP (含95%置信区间) 和 ICE 组合图...")
+# 遍历最重要的N个特征
+for feature_name in top_features_pdp_names:
+    logger.debug(f"正在计算特征 '{feature_name}' 的PDP/ICE数据...")
+    try:
+        # 使用手动编写的函数计算1D PDP和ICE数据
+        grid_vals, pdp_vals, ice_lines_vals = manual_pdp_1d(
+            best_model, X_train_scaled_df, feature_name
+        )
 
-#         # 在每个网格点上计算所有ICE线的标准差，用于构建置信区间
-#         pdp_std = np.std(ice_lines_vals, axis=0)
+        # 在每个网格点上计算所有ICE线的标准差，用于构建置信区间
+        pdp_std = np.std(ice_lines_vals, axis=0)
 
-#         # 开始绘图
-#         fig, ax = plt.subplots(figsize=(10, 8))
+        # 开始绘图
+        fig, ax = plt.subplots(figsize=(10, 8))
 
-#         # 绘制所有样本的ICE线 (半透明蓝色细线)
-#         for ice_line in ice_lines_vals:
-#             ax.plot(grid_vals, ice_line, color="tab:blue", alpha=0.05, linewidth=0.5)
+        # 绘制所有样本的ICE线 (半透明蓝色细线)
+        for ice_line in ice_lines_vals:
+            ax.plot(grid_vals, ice_line, color="tab:blue", alpha=0.05, linewidth=0.5)
 
-#         # 绘制PDP线 (红色虚线)，代表平均效应
-#         ax.plot(
-#             grid_vals,
-#             pdp_vals,
-#             color="red",
-#             linestyle="--",
-#             linewidth=3,
-#             label="Average Effect (PDP)",
-#         )
+        # 绘制PDP线 (红色虚线)，代表平均效应
+        ax.plot(
+            grid_vals,
+            pdp_vals,
+            color="red",
+            linestyle="--",
+            linewidth=3,
+            label="Average Effect (PDP)",
+        )
 
-#         # 绘制95%置信区间 (平均值 ± 1.96 * 标准差)
-#         ax.fill_between(
-#             grid_vals,
-#             pdp_vals - 1.96 * pdp_std,
-#             pdp_vals + 1.96 * pdp_std,
-#             color="skyblue",
-#             alpha=0.4,
-#             label="95% Confidence Interval",
-#         )
+        # 绘制95%置信区间 (平均值 ± 1.96 * 标准差)
+        ax.fill_between(
+            grid_vals,
+            pdp_vals - 1.96 * pdp_std,
+            pdp_vals + 1.96 * pdp_std,
+            color="skyblue",
+            alpha=0.4,
+            label="95% Confidence Interval",
+        )
 
-#         ax.set_title(
-#             f"PDP/ICE Combination Plot\nFeature: {feature_name}", fontsize=16
-#         )  # 设置标题
-#         ax.set_xlabel(
-#             f"{feature_name} (Standardized Value)", fontsize=12
-#         )  # 设置x轴标签
-#         ax.set_ylabel("Dependency on Predicted Values", fontsize=12)  # 设置y轴标签
-#         ax.legend()  # 显示图例
-#         # 保存图表
-#         # --- 【tabpfn 修改】 ---
-#         plt.savefig(
-#             os.path.join(pdp_ice_save_dir, f"tabpfn_Manual_PDP_ICE_{feature_name}.png"),
-#             dpi=300,
-#             bbox_inches="tight",
-#         )
-#         plt.close(fig)  # 关闭图表
-#         logger.debug(f"成功绘制特征 '{feature_name}' 的PDP/ICE图。")
+        ax.set_title(
+            f"PDP/ICE Combination Plot\nFeature: {feature_name}", fontsize=16
+        )  # 设置标题
+        ax.set_xlabel(
+            f"{feature_name} (Standardized Value)", fontsize=12
+        )  # 设置x轴标签
+        ax.set_ylabel("Dependency on Predicted Values", fontsize=12)  # 设置y轴标签
+        ax.legend()  # 显示图例
+        # 保存图表
+        # --- 【tabpfn 修改】 ---
+        plt.savefig(
+            os.path.join(pdp_ice_save_dir, f"tabpfn_Manual_PDP_ICE_{feature_name}.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
+        plt.close(fig)  # 关闭图表
+        logger.debug(f"成功绘制特征 '{feature_name}' 的PDP/ICE图。")
 
-#     except Exception as e:
-#         logger.error(f"绘制手动 PDP/ICE for {feature_name} 出错: {e}")  # 打印错误信息
+    except Exception as e:
+        logger.error(f"绘制手动 PDP/ICE for {feature_name} 出错: {e}")  # 打印错误信息
 
-# # --- 2. 绘制双变量 (2D 和 3D) PDP 图 ---
-# logger.info("\n开始绘制双变量 PDP (2D 热力图 和 3D 曲面图)...")
-# if len(top_features_pdp_names) >= 2:  # 确保至少有两个特征可以进行组合
-#     # 遍历最重要的N个特征中的所有两两组合
-#     for feat1, feat2 in combinations(top_features_pdp_names, 2):
-#         logger.debug(f"正在计算特征对 '{feat1}' vs '{feat2}' 的2D PDP数据...")
-#         try:
-#             # 使用手动编写的函数计算2D PDP数据
-#             grid_x, grid_y, pdp_z = manual_pdp_2d(
-#                 best_model, X_train_scaled_df, (feat1, feat2)
-#             )
+# --- 2. 绘制双变量 (2D 和 3D) PDP 图 ---
+logger.info("\n开始绘制双变量 PDP (2D 热力图 和 3D 曲面图)...")
+if len(top_features_pdp_names) >= 2:  # 确保至少有两个特征可以进行组合
+    # 遍历最重要的N个特征中的所有两两组合
+    for feat1, feat2 in combinations(top_features_pdp_names, 2):
+        logger.debug(f"正在计算特征对 '{feat1}' vs '{feat2}' 的2D PDP数据...")
+        try:
+            # 使用手动编写的函数计算2D PDP数据
+            grid_x, grid_y, pdp_z = manual_pdp_2d(
+                best_model, X_train_scaled_df, (feat1, feat2)
+            )
 
-#             # 创建用于绘图的网格坐标
-#             XX, YY = np.meshgrid(grid_x, grid_y)
-#             # 注意：pdp_z的维度可能需要转置以匹配meshgrid的坐标系
-#             ZZ = pdp_z.T
+            # 创建用于绘图的网格坐标
+            XX, YY = np.meshgrid(grid_x, grid_y)
+            # 注意：pdp_z的维度可能需要转置以匹配meshgrid的坐标系
+            ZZ = pdp_z.T
 
-#             # 绘制 2D 热力图
-#             fig_2d, ax_2d = plt.subplots(figsize=(8, 7))
-#             # 使用contourf填充等值线图
-#             c = ax_2d.contourf(XX, YY, ZZ, cmap="viridis", levels=20)
-#             fig_2d.colorbar(c, ax=ax_2d, label="Partial Dependency Value")  # 添加颜色条
-#             ax_2d.set_title(f"2D PDP: {feat1} vs {feat2}", fontsize=16)  # 设置标题
-#             ax_2d.set_xlabel(
-#                 f"{feat1} (Standardized Value)", fontsize=12
-#             )  # 设置x轴标签
-#             ax_2d.set_ylabel(
-#                 f"{feat2} (Standardized Value)", fontsize=12
-#             )  # 设置y轴标签
-#             # --- 【tabpfn 修改】 ---
-#             plt.savefig(
-#                 os.path.join(
-#                     pdp_2way_save_dir, f"tabpfn_Manual_PDP_2D_{feat1}_{feat2}.png"
-#                 ),
-#                 dpi=300,
-#             )  # 保存
-#             plt.close(fig_2d)  # 关闭图表
+            # 绘制 2D 热力图
+            fig_2d, ax_2d = plt.subplots(figsize=(8, 7))
+            # 使用contourf填充等值线图
+            c = ax_2d.contourf(XX, YY, ZZ, cmap="viridis", levels=20)
+            fig_2d.colorbar(c, ax=ax_2d, label="Partial Dependency Value")  # 添加颜色条
+            ax_2d.set_title(f"2D PDP: {feat1} vs {feat2}", fontsize=16)  # 设置标题
+            ax_2d.set_xlabel(
+                f"{feat1} (Standardized Value)", fontsize=12
+            )  # 设置x轴标签
+            ax_2d.set_ylabel(
+                f"{feat2} (Standardized Value)", fontsize=12
+            )  # 设置y轴标签
+            # --- 【tabpfn 修改】 ---
+            plt.savefig(
+                os.path.join(
+                    pdp_2way_save_dir, f"tabpfn_Manual_PDP_2D_{feat1}_{feat2}.png"
+                ),
+                dpi=300,
+            )  # 保存
+            plt.close(fig_2d)  # 关闭图表
 
-#             # 绘制 3D 曲面图
-#             fig_3d = plt.figure(figsize=(12, 9))
-#             ax_3d = fig_3d.add_subplot(111, projection="3d")  # 创建3D子图
-#             # 绘制3D曲面
-#             surf = ax_3d.plot_surface(
-#                 XX, YY, ZZ, cmap="viridis", edgecolor="none", antialiased=True
-#             )
-#             fig_3d.colorbar(
-#                 surf, shrink=0.5, aspect=20, label="Partial Dependency Value", pad=0.1
-#             )  # 添加颜色条
-#             ax_3d.set_xlabel(
-#                 f"{feat1} (Standardized Value)", fontsize=10, labelpad=10
-#             )  # x轴标签
-#             ax_3d.set_ylabel(
-#                 f"{feat2} (Standardized Value)", fontsize=10, labelpad=10
-#             )  # y轴标签
-#             ax_3d.set_zlabel(
-#                 "Dependency on Predicted Values (PDP)",
-#                 fontsize=10,
-#                 labelpad=10,
-#                 rotation=180,
-#             )  # z轴标签
-#             ax_3d.set_title(
-#                 f"3D Partial Dependency Plot (3D PDP)\n{feat1} vs {feat2}", fontsize=14
-#             )  # 标题
-#             ax_3d.view_init(elev=20, azim=45)  # 设置视角
-#             # --- 【tabpfn 修改】 ---
-#             plt.savefig(
-#                 os.path.join(
-#                     pdp_3d_save_dir, f"tabpfn_Manual_PDP_3D_{feat1}_{feat2}.png"
-#                 ),
-#                 dpi=300,
-#             )  # 保存
-#             plt.close(fig_3d)  # 关闭图表
+            # 绘制 3D 曲面图
+            fig_3d = plt.figure(figsize=(12, 9))
+            ax_3d = fig_3d.add_subplot(111, projection="3d")  # 创建3D子图
+            # 绘制3D曲面
+            surf = ax_3d.plot_surface(
+                XX, YY, ZZ, cmap="viridis", edgecolor="none", antialiased=True
+            )
+            fig_3d.colorbar(
+                surf, shrink=0.5, aspect=20, label="Partial Dependency Value", pad=0.1
+            )  # 添加颜色条
+            ax_3d.set_xlabel(
+                f"{feat1} (Standardized Value)", fontsize=10, labelpad=10
+            )  # x轴标签
+            ax_3d.set_ylabel(
+                f"{feat2} (Standardized Value)", fontsize=10, labelpad=10
+            )  # y轴标签
+            ax_3d.set_zlabel(
+                "Dependency on Predicted Values (PDP)",
+                fontsize=10,
+                labelpad=10,
+                rotation=180,
+            )  # z轴标签
+            ax_3d.set_title(
+                f"3D Partial Dependency Plot (3D PDP)\n{feat1} vs {feat2}", fontsize=14
+            )  # 标题
+            ax_3d.view_init(elev=20, azim=45)  # 设置视角
+            # --- 【tabpfn 修改】 ---
+            plt.savefig(
+                os.path.join(
+                    pdp_3d_save_dir, f"tabpfn_Manual_PDP_3D_{feat1}_{feat2}.png"
+                ),
+                dpi=300,
+            )  # 保存
+            plt.close(fig_3d)  # 关闭图表
 
-#             logger.debug(f"成功绘制特征对 '{feat1}' vs '{feat2}' 的2D和3D PDP图。")
+            logger.debug(f"成功绘制特征对 '{feat1}' vs '{feat2}' 的2D和3D PDP图。")
 
-#         except Exception as e:
-#             logger.error(
-#                 f"绘制手动 2D/3D PDP for {feat1} & {feat2} 出错: {e}"
-#             )  # 打印错误信息
+        except Exception as e:
+            logger.error(
+                f"绘制手动 2D/3D PDP for {feat1} & {feat2} 出错: {e}"
+            )  # 打印错误信息
 
-# # --- 绘制三特征3D散点图 ---
-# logger.debug("\n开始绘制三特征 (3D) 散点图...")
-# pdp_3d_scatter_save_dir = os.path.join(
-#     pdp_ice_save_dir, "3D_Scatter_Three_Features"
-# )  # 定义保存目录
-# os.makedirs(pdp_3d_scatter_save_dir, exist_ok=True)  # 创建目录
+# --- 绘制三特征3D散点图 ---
+logger.debug("\n开始绘制三特征 (3D) 散点图...")
+pdp_3d_scatter_save_dir = os.path.join(
+    pdp_ice_save_dir, "3D_Scatter_Three_Features"
+)  # 定义保存目录
+os.makedirs(pdp_3d_scatter_save_dir, exist_ok=True)  # 创建目录
 
-# if len(top_features_pdp_names) >= 3:  # 确保至少有3个特征
-#     # 最多选择前4个重要特征进行组合，避免组合数过多
-#     n_features_for_3d_scatter = min(len(top_features_pdp_names), 4)
+if len(top_features_pdp_names) >= 3:  # 确保至少有3个特征
+    # 最多选择前4个重要特征进行组合，避免组合数过多
+    n_features_for_3d_scatter = min(len(top_features_pdp_names), 4)
 
-#     # 遍历所有三个特征的组合
-#     for features_tuple in combinations(
-#         top_features_pdp_names[:n_features_for_3d_scatter], 3
-#     ):
-#         try:
-#             # 定义保存路径
-#             # --- 【tabpfn 修改】 ---
-#             save_path = os.path.join(
-#                 pdp_3d_scatter_save_dir,
-#                 f"tabpfn_3D_Scatter_{features_tuple[0]}_{features_tuple[1]}_{features_tuple[2]}.png",
-#             )
-#             # 调用函数绘制3D散点图
-#             plot_3d_scatter_three_features(
-#                 X_test_scaled_df, y_test_pred, features_tuple, save_path
-#             )
-#         except Exception as e:
-#             logger.error(
-#                 f"绘制 3D 散点图 for {features_tuple} 出错: {e}"
-#             )  # 打印错误信息
+    # 遍历所有三个特征的组合
+    for features_tuple in combinations(
+        top_features_pdp_names[:n_features_for_3d_scatter], 3
+    ):
+        try:
+            # 定义保存路径
+            # --- 【tabpfn 修改】 ---
+            save_path = os.path.join(
+                pdp_3d_scatter_save_dir,
+                f"tabpfn_3D_Scatter_{features_tuple[0]}_{features_tuple[1]}_{features_tuple[2]}.png",
+            )
+            # 调用函数绘制3D散点图
+            plot_3d_scatter_three_features(
+                X_test_scaled_df, y_test_pred, features_tuple, save_path
+            )
+        except Exception as e:
+            logger.error(
+                f"绘制 3D 散点图 for {features_tuple} 出错: {e}"
+            )  # 打印错误信息
 
-# # --- 调用：绘制固定特征值的3D PDP图 ---
-# logger.debug("\n开始绘制固定特征值的3D PDP图...")
-# pdp_3d_fixed_save_dir = os.path.join(
-#     pdp_ice_save_dir, "3D_PDP_Fixed_Value"
-# )  # 定义保存目录
-# os.makedirs(pdp_3d_fixed_save_dir, exist_ok=True)  # 创建目录
+# --- 调用：绘制固定特征值的3D PDP图 ---
+logger.debug("\n开始绘制固定特征值的3D PDP图...")
+pdp_3d_fixed_save_dir = os.path.join(
+    pdp_ice_save_dir, "3D_PDP_Fixed_Value"
+)  # 定义保存目录
+os.makedirs(pdp_3d_fixed_save_dir, exist_ok=True)  # 创建目录
 
-# if len(top_features_pdp_names) >= 3:  # 确保至少有3个特征
-#     # 最多选择前4个重要特征进行组合
-#     n_features_for_3d_fixed = min(len(top_features_pdp_names), 4)
+if len(top_features_pdp_names) >= 3:  # 确保至少有3个特征
+    # 最多选择前4个重要特征进行组合
+    n_features_for_3d_fixed = min(len(top_features_pdp_names), 4)
 
-#     # 遍历所有三个特征的组合
-#     for features_tuple in combinations(
-#         top_features_pdp_names[:n_features_for_3d_fixed], 3
-#     ):
-#         # 对每个组合，轮流固定其中的一个特征
-#         for feature_to_fix in features_tuple:
-#             try:
-#                 features_list = list(features_tuple)  # 元组转列表
-#                 # 获取另外两个变化的特征
-#                 varying_feats = [f for f in features_list if f != feature_to_fix]
-#                 # 定义保存路径
-#                 # --- 【tabpfn 修改】 ---
-#                 save_path = os.path.join(
-#                     pdp_3d_fixed_save_dir,
-#                     f"tabpfn_3DPDP_{varying_feats[0]}_{varying_feats[1]}_Fix_{feature_to_fix}.png",
-#                 )
-#                 # 将固定的值设为该特征的中位数
-#                 fixed_val = X_train_scaled_df[feature_to_fix].median()
+    # 遍历所有三个特征的组合
+    for features_tuple in combinations(
+        top_features_pdp_names[:n_features_for_3d_fixed], 3
+    ):
+        # 对每个组合，轮流固定其中的一个特征
+        for feature_to_fix in features_tuple:
+            try:
+                features_list = list(features_tuple)  # 元组转列表
+                # 获取另外两个变化的特征
+                varying_feats = [f for f in features_list if f != feature_to_fix]
+                # 定义保存路径
+                # --- 【tabpfn 修改】 ---
+                save_path = os.path.join(
+                    pdp_3d_fixed_save_dir,
+                    f"tabpfn_3DPDP_{varying_feats[0]}_{varying_feats[1]}_Fix_{feature_to_fix}.png",
+                )
+                # 将固定的值设为该特征的中位数
+                fixed_val = X_train_scaled_df[feature_to_fix].median()
 
-#                 # 调用函数绘制固定特征值的3D PDP图
-#                 plot_3d_pdp_fixed_value(
-#                     best_model,
-#                     X_train_scaled_df,
-#                     features_list,
-#                     save_path,
-#                     fixed_feature=feature_to_fix,
-#                     fixed_value=fixed_val,
-#                 )
-#             except Exception as e:
-#                 logger.error(
-#                     f"绘制固定值3D PDP for {features_list} (固定 {feature_to_fix}) 出错: {e}"
-#                 )  # 打印错误信息
+                # 调用函数绘制固定特征值的3D PDP图
+                plot_3d_pdp_fixed_value(
+                    best_model,
+                    X_train_scaled_df,
+                    features_list,
+                    save_path,
+                    fixed_feature=feature_to_fix,
+                    fixed_value=fixed_val,
+                )
+            except Exception as e:
+                logger.error(
+                    f"绘制固定值3D PDP for {features_list} (固定 {feature_to_fix}) 出错: {e}"
+                )  # 打印错误信息
 
 # --- 【tabpfn 修改】 ---
 logger.info("------------------------开始 SHAP 分析 (tabpfn)------------------------")
@@ -682,48 +682,48 @@ COLOR_THEMES = {
 }
 selected_theme_id = 11
 cmap_name = COLOR_THEMES.get(selected_theme_id, "coolwarm")
-explainer = interpretability.shapiq.get_tabpfn_explainer(
-    model=best_model,
-    data=X_test_scaled_df,
-    labels=y_test,
-    index="FSII",  # SV: Shapley Value, FSII: Faithful Shapley Interaction Index
-    max_order=2,  # maximum order of the Shapley interactions (2 for pairwise interactions)
-    verbose=True,  # show a progress bar during explanation
-)
+# explainer = interpretability.shapiq.get_tabpfn_explainer(
+#     model=best_model,
+#     data=X_test_scaled_df,
+#     labels=y_test,
+#     index="FSII",  # SV: Shapley Value, FSII: Faithful Shapley Interaction Index
+#     max_order=2,  # maximum order of the Shapley interactions (2 for pairwise interactions)
+#     verbose=True,  # show a progress bar during explanation
+# )
 
-lenth = len(perm_importance_df["Feature"].tolist())
+# lenth = len(perm_importance_df["Feature"].tolist())
 
-shap_interaction_values = np.zeros((X_test_scaled_df.values.shape[0], lenth, lenth))
+# shap_interaction_values = np.zeros((X_test_scaled_df.values.shape[0], lenth, lenth))
 
 # 用tqdm显示进度条
-for x_sample_idx in tqdm.tqdm(range(X_test_scaled_df.values.shape[0])):
-    shap_interaction_values_ori = explainer.explain(
-        x=X_test_scaled_df.values[x_sample_idx], budget=256
-    )
-    for i in range(lenth):
-        for j in range(lenth):
-            if i == j:
-                key = (i,)
-            elif i < j:
-                key = (i, j)
-            else:
-                key = (j, i)
+# for x_sample_idx in tqdm.tqdm(range(X_test_scaled_df.values.shape[0])):
+#     shap_interaction_values_ori = explainer.explain(
+#         x=X_test_scaled_df.values[x_sample_idx], budget=256
+#     )
+#     for i in range(lenth):
+#         for j in range(lenth):
+#             if i == j:
+#                 key = (i,)
+#             elif i < j:
+#                 key = (i, j)
+#             else:
+#                 key = (j, i)
 
-            shap_interaction_values[x_sample_idx, i, j] = (
-                shap_interaction_values_ori.dict_values[key]
-            )
+#             shap_interaction_values[x_sample_idx, i, j] = (
+#                 shap_interaction_values_ori.dict_values[key]
+#             )
 
-# 用pkl保存shap_interaction_values
-with open(
-    os.path.join(model_save_dir, "tabpfn_SHAP_interaction_values.pkl"), "wb"
-) as f:
-    pickle.dump(
-        shap_interaction_values,
-        f,
-    )
-shap_interaction_values = pickle.load(
-    open(os.path.join(model_save_dir, "tabpfn_SHAP_interaction_values.pkl"), "rb")
-)
+# # 用pkl保存shap_interaction_values
+# with open(
+#     os.path.join(model_save_dir, "tabpfn_SHAP_interaction_values.pkl"), "wb"
+# ) as f:
+#     pickle.dump(
+#         shap_interaction_values,
+#         f,
+#     )
+# shap_interaction_values = pickle.load(
+#     open(os.path.join(model_save_dir, "tabpfn_SHAP_interaction_values.pkl"), "rb")
+# )
 
 shap_custom_save_dir = os.path.join(shap_save_dir, "custom_Plots")
 os.makedirs(shap_custom_save_dir, exist_ok=True)  # 创建目录
@@ -743,25 +743,25 @@ create_and_save_top_dependence_plots(
     output_folder=shap_custom_save_dir,
     selected_theme_id=selected_theme_id,
 )
-create_and_save_interaction_heatmap(
-    shap_values=shap_values.values,
-    shap_interaction_values=shap_interaction_values,
-    X_test=X_test_scaled_df,
-    title="SHAP Interaction",
-    cmap_name=cmap_name,
-    output_folder=shap_custom_save_dir,
-    filename_base="shap_interaction",
-    selected_theme_id=selected_theme_id,
-)
-create_and_save_top_interaction_dependence_plots(
-    shap_interaction_values=shap_interaction_values,
-    X_test=X_test_scaled_df,
-    title="SHAP Interaction Dependence Plots",
-    cmap_name=cmap_name,
-    output_folder=shap_custom_save_dir,
-    filename_base="shap_interaction_dependence",
-    selected_theme_id=selected_theme_id,
-)
+# create_and_save_interaction_heatmap(
+#     shap_values=shap_values.values,
+#     shap_interaction_values=shap_interaction_values,
+#     X_test=X_test_scaled_df,
+#     title="SHAP Interaction",
+#     cmap_name=cmap_name,
+#     output_folder=shap_custom_save_dir,
+#     filename_base="shap_interaction",
+#     selected_theme_id=selected_theme_id,
+# )
+# create_and_save_top_interaction_dependence_plots(
+#     shap_interaction_values=shap_interaction_values,
+#     X_test=X_test_scaled_df,
+#     title="SHAP Interaction Dependence Plots",
+#     cmap_name=cmap_name,
+#     output_folder=shap_custom_save_dir,
+#     filename_base="shap_interaction_dependence",
+#     selected_theme_id=selected_theme_id,
+# )
 
 
 logger.info(

@@ -131,7 +131,7 @@ logger.info(
     "-------------------------------------搜索最佳超参数---------------------------------------"
 )
 # 实例化GridSearchCV对象，用于自动寻找最佳超参数组合
-sampler = optuna.samplers.CmaEsSampler()
+sampler = optuna.samplers.TPESampler()
 study = optuna.create_study(direction="minimize", sampler=sampler)  # 最小化MAE
 
 study.optimize(objective, n_trials=100, show_progress_bar=True)
