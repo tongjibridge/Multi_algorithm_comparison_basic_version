@@ -49,6 +49,18 @@ pip install optuna scikit-learn pandas numpy matplotlib seaborn lightgbm catboos
 3. **分析结果**：使用 `paras_read.py` 提取最优参数，使用 `tools.py` 中的函数进行可视化分析。
 4. **相关性分析**：运行 `corr.py` 以分析数据集中特征之间的关系。
 
+## 参考
+
+微信公众号
+
+* Python+遥感学习日志
+* Lvy的口袋
+* Python机器学习AI
+* AI智能Python学习
+* Python机器学习ML
+* 3S&ML
+* 会一点GIS的地灾研究生
+
 ## 许可证
 
 本项目使用 [MIT License](LICENSE)，请在使用前确认遵循该许可协议。
