@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多算法对比平台 - Multi Algorithm Comparison</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #f5f5f5;
+            color: #212121;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            max-width: 177.78vh;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* App Bar */
+        .app-bar {
+            background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .app-bar h1 {
+            font-size: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-bar h1 .material-icons {
+            font-size: 28px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            background: #3949ab;
+            padding: 0 24px;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            padding: 14px 24px;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-tab.active {
+            color: white;
+            border-bottom-color: #ffca28;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            scroll-behavior: smooth;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #1a237e;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card p {
+            line-height: 1.6;
+            color: #424242;
+            font-size: 14px;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .feature-card .material-icons {
+            font-size: 48px;
+            color: #3949ab;
+            margin-bottom: 12px;
+        }
+
+        .feature-card h4 {
+            color: #212121;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            color: #757575;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Algorithm List */
+        .algo-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .algo-item {
+            background: #e8eaf6;
+            padding: 12px 16px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .algo-item:hover {
+            background: #c5cae9;
+            transform: scale(1.02);
+        }
+
+        .algo-item .material-icons {
+            color: #3949ab;
+            font-size: 20px;
+        }
+
+        .algo-item span {
+            color: #212121;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* File List */
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+        }
+
+        .file-item {
+            background: white;
+            padding: 14px 18px;
+            border-radius: 6px;
+            border-left: 4px solid #3949ab;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .file-item h5 {
+            color: #1a237e;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .file-item p {
+            color: #757575;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        /* Installation Code */
+        .code-block {
+            background: #263238;
+            color: #eceff1;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        /* Steps */
+        .step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            width: 36px;
+            height: 36px;
+            background: #3949ab;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            color: #1a237e;
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .step-content p {
+            color: #616161;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Reference Tags */
+        .ref-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .ref-tag {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ref-tag .material-icons {
+            font-size: 16px;
+        }
+
+        /* License Badge */
+        .license-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #c8e6c9;
+            color: #2e7d32;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            background: #ffca28;
+            color: #212121;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .hero h2 {
+            font-size: 28px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            font-size: 15px;
+            opacity: 0.9;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-bar">
+            <h1>
+                <span class="material-icons">analytics</span>
+                多算法对比平台
+            </h1>
+            <span style="opacity: 0.8; font-size: 13px;">Multi Algorithm Comparison</span>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-page="overview">
+                <span class="material-icons">dashboard</span>
+                项目概览
+            </div>
+            <div class="nav-tab" data-page="algorithms">
+                <span class="material-icons">psychology</span>
+                算法列表
+            </div>
+            <div class="nav-tab" data-page="files">
+                <span class="material-icons">folder_open</span>
+                文件结构
+            </div>
+            <div class="nav-tab" data-page="usage">
+                <span class="material-icons">play_circle</span>
+                使用指南
+            </div>
+            <div class="nav-tab" data-page="install">
+                <span class="material-icons">download</span>
+                安装部署
+            </div>
+            <div class="nav-tab" data-page="reference">
+                <span class="material-icons">menu_book</span>
+                参考资料
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Overview Page -->
+            <div class="page active" id="overview">
+                <div class="hero">
+                    <h2>Multi Algorithm Comparison Platform</h2>
+                    <p>本项目旨在比较多种机器学习算法在特定数据集或任务上的性能，帮助研究人员和开发者快速了解各算法在不同场景下的优劣。</p>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <span class="material-icons">compare_arrows</span>
+                        <h4>算法比较</h4>
+                        <p>包含多种主流机器学习算法的实现与调参，便于对比性能</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="material-icons">tune</span>
+                        <h4>自动调参</h4>
+                        <p>使用 Optuna 进行自动化超参数优化，提高模型性能</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="material-icons">bar_chart</span>
+                        <h4>SHAP 可视化</h4>
+                        <p>支持模型可解释性分析，包含 SHAP 值的多种可视化方法</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="material-icons">transform</span>
+                        <h4>数据预处理</h4>
+                        <p>提供标准化、编码、特征分析等常用预处理功能</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="material-icons">insert_chart</span>
+                        <h4>可视化工具</h4>
+                        <p>内建多种可视化函数，包括回归拟合图、残差图、特征重要性图等</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="material-icons">speed</span>
+                        <h4>高效便捷</h4>
+                        <p>统一接口设计，快速上手，支持批量运行和结果对比</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Algorithms Page -->
+            <div class="page" id="algorithms">
+                <div class="card">
+                    <h3><span class="material-icons">psychology</span>支持的机器学习算法</h3>
+                    <p>本项目实现了以下多种主流回归算法，每个算法都包含基于 Optuna 的自动调参功能：</p>
+                </div>
+
+                <div class="algo-list">
+                    <div class="algo-item">
+                        <span class="material-icons">pets</span>
+                        <span>CatBoost 回归</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">account_tree</span>
+                        <span>决策树回归</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">scatter_plot</span>
+                        <span>K近邻回归</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">bolt</span>
+                        <span>LightGBM</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">park</span>
+                        <span>随机森林</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">grain</span>
+                        <span>支持向量机</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">trending_up</span>
+                        <span>梯度提升</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">hub</span>
+                        <span>多层感知器</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">device_hub</span>
+                        <span>极限学习机</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">auto_awesome</span>
+                        <span>XRFM 回归</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">table_chart</span>
+                        <span>TabM 回归</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">tab</span>
+                        <span>TabPFN 回归</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">show_chart</span>
+                        <span>XGBoost 回归</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">functions</span>
+                        <span>贝叶斯回归</span>
+                    </div>
+                    <div class="algo-item">
+                        <span class="material-icons">layers</span>
+                        <span>Stacking 集成</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Page -->
+            <div class="page" id="files">
+                <div class="card">
+                    <h3><span class="material-icons">folder_open</span>项目文件结构</h3>
+                    <p>本项目的核心文件及功能说明：</p>
+                </div>
+
+                <div class="file-list">
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>CatBoost.py</h5>
+                        <p>CatBoost 回归模型实现，包含 Optuna 自动调参功能</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>DT.py</h5>
+                        <p>决策树回归模型实现，支持参数优化</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>KNN.py</h5>
+                        <p>K近邻回归模型实现，包含最优 K 值搜索</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>LightGBM-optuna.py</h5>
+                        <p>LightGBM 回归模型，使用 Optuna 进行超参数优化</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>RF.py</h5>
+                        <p>随机森林回归模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>SVR.py</h5>
+                        <p>支持向量回归模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>GBR.py</h5>
+                        <p>梯度提升回归模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>MLP.py</h5>
+                        <p>多层感知器神经网络回归模型</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>elm.py</h5>
+                        <p>极限学习机回归模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>xrfm_reg.py</h5>
+                        <p>XRFM 回归模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>tabm_reg.py</h5>
+                        <p>TabM 回归模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>tabpfn_reg.py</h5>
+                        <p>TabPFN 回归模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>XGBoost.py</h5>
+                        <p>XGBoost 回归模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>bay.py</h5>
+                        <p>贝叶斯回归模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">code</span>stack.py</h5>
+                        <p>Stacking 集成学习模型实现</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">build</span>tools.py</h5>
+                        <p>提供多种可视化和预处理工具函数，如数据标准化、SHAP 可视化、残差图绘制等</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">build</span>corr.py</h5>
+                        <p>用于分析数据集特征之间的相关性，包括连续变量、离散变量和多共线性分析</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">build</span>encode.py</h5>
+                        <p>对数据集中的分类变量进行编码处理</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">build</span>paras_read.py</h5>
+                        <p>用于提取和读取最优模型参数</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">build</span>runall.py</h5>
+                        <p>批量运行所有算法的主程序</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">folder</span>result/</h5>
+                        <p>用于保存模型预测结果和分析报告的目录</p>
+                    </div>
+                    <div class="file-item">
+                        <h5><span class="material-icons">folder</span>savemodel/</h5>
+                        <p>用于保存训练完成的模型文件的目录</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Page -->
+            <div class="page" id="usage">
+                <div class="card">
+                    <h3><span class="material-icons">play_circle</span>使用指南</h3>
+                    <p>按照以下步骤快速开始使用本项目：</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>准备数据集</h4>
+                        <p>将数据集整理为 .csv 或其他可读格式，并确保数据集路径正确。数据集应包含特征列和目标变量列。</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>数据预处理</h4>
+                        <p>使用 encode.py 对分类变量进行编码，使用 tools.py 中的函数进行数据标准化和特征分析。可选运行 corr.py 分析特征相关性。</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>运行单个模型</h4>
+                        <p>直接运行对应的算法文件，如 LightGBM-optuna.py，该文件将使用 Optuna 自动调参并保存最优模型到 savemodel/ 目录。</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>批量运行所有模型</h4>
+                        <p>运行 runall.py 可以依次执行所有算法，自动进行参数优化和模型训练，结果统一保存便于对比。</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>分析结果</h4>
+                        <p>使用 paras_read.py 提取最优参数，使用 tools.py 中的函数进行可视化分析，包括回归拟合图、残差图、特征重要性图等。</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><span class="material-icons">tips_and_updates</span>提示</h3>
+                    <p>建议优先使用 uv 进行环境管理，可以快速安装所有依赖并创建独立的虚拟环境。</p>
+                </div>
+            </div>
+
+            <!-- Install Page -->
+            <div class="page" id="install">
+                <div class="card">
+                    <h3><span class="material-icons">download</span>环境安装</h3>
+                    <p>本项目需要以下 Python 依赖库：</p>
+                </div>
+
+                <div class="card">
+                    <h3>使用 pip 安装</h3>
+                    <div class="code-block">pip install optuna scikit-learn pandas numpy matplotlib seaborn lightgbm catboost shap xgboost</div>
+                </div>
+
+                <div class="card">
+                    <h3>使用 uv 安装（推荐）</h3>
+                    <p>项目已包含 pyproject.toml 和 uv.lock 文件，可以使用 uv 快速设置环境：</p>
+                    <div class="code-block"># 安装 uv（如果尚未安装）
+pip install uv
+
+# 同步项目依赖
+uv sync
+
+# 激活虚拟环境
+uv shell</div>
+                </div>
+
+                <div class="card">
+                    <h3>主要依赖说明</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>optuna</strong> - 自动化超参数优化框架
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>scikit-learn</strong> - 机器学习基础库
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>lightgbm</strong> - LightGBM 梯度提升库
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>catboost</strong> - CatBoost 模型库
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>shap</strong> - 模型可解释性分析库
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>xgboost</strong> - XGBoost 梯度提升库
+                        </li>
+                        <li style="padding: 8px 0;">
+                            <strong>pandas, numpy</strong> - 数据处理基础库
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Python 版本要求</h3>
+                    <p>建议使用 Python 3.8 或更高版本以获得最佳兼容性和性能。</p>
+                </div>
+            </div>
+
+            <!-- Reference Page -->
+            <div class="page" id="reference">
+                <div class="card">
+                    <h3><span class="material-icons">menu_book</span>参考资料</h3>
+                    <p>本项目参考了以下微信公众号的内容：</p>
+                </div>
+
+                <div class="ref-tags">
+                    <div class="ref-tag">
+                        <span class="material-icons">article</span>
+                        Python+遥感学习日志
+                    </div>
+                    <div class="ref-tag">
+                        <span class="material-icons">article</span>
+                        Lvy的口袋
+                    </div>
+                    <div class="ref-tag">
+                        <span class="material-icons">article</span>
+                        Python机器学习AI
+                    </div>
+                    <div class="ref-tag">
+                        <span class="material-icons">article</span>
+                        AI智能Python学习
+                    </div>
+                    <div class="ref-tag">
+                        <span class="material-icons">article</span>
+                        Python机器学习ML
+                    </div>
+                    <div class="ref-tag">
+                        <span class="material-icons">article</span>
+                        3S&ML
+                    </div>
+                    <div class="ref-tag">
+                        <span class="material-icons">article</span>
+                        会一点GIS的地灾研究生
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <h3><span class="material-icons">verified</span>许可证</h3>
+                    <div style="margin-top: 16px;">
+                        <span class="license-badge">
+                            <span class="material-icons">check_circle</span>
+                            MIT License
+                        </span>
+                        <p style="margin-top: 12px; color: #757575; font-size: 13px;">
+                            本项目使用 MIT License 开源协议，允许自由使用、修改和分发。在使用前请确认遵循该许可协议。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 16px;">
+                    <h3><span class="material-icons">github</span>开源项目</h3>
+                    <p>本项目欢迎贡献和反馈，如发现问题或有改进建议，欢迎提交 Issue 或 Pull Request。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        const tabs = document.querySelectorAll('.nav-tab');
+        const pages = document.querySelectorAll('.page');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetPage = tab.dataset.page;
+
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Update active page
+                pages.forEach(page => {
+                    page.classList.remove('active');
+                    if (page.id === targetPage) {
+                        page.classList.add('active');
+                    }
+                });
+
+                // Scroll to top of content
+                document.querySelector('.content').scrollTop = 0;
+            });
+        });
+
+        // Add ripple effect to cards
+        document.querySelectorAll('.feature-card, .algo-item, .file-item').forEach(card => {
+            card.addEventListener('click', function(e) {
+                const ripple = document.createElement('div');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: rgba(57, 73, 171, 0.3);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple 0.6s ease-out;
+                    pointer-events: none;
+                `;
+
+                this.style.position = 'relative';
+                this.style.overflow = 'hidden';
+                this.appendChild(ripple);
+
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Add ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(2);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
