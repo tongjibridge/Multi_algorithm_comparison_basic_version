@@ -1,0 +1,64 @@
+# === 项目要求：忽略多算法实践参考代码（含其 .venv、result 等） ===
+Multi_algorithm_comparison_basic_version/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# 虚拟环境（uv / venv）
+.venv/
+venv/
+env/
+
+# uv 缓存（uv.lock 应当提交，故不忽略）
+.uv/
+.uv-cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 测试与缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# === 程序运行产物 ===
+outputs/
+results/
+savemodel/
+uploads/
+*.log
+
+# === 操作系统 ===
+.DS_Store
+Thumbs.db
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+
+# 第三方源码（tabpfn-extensions，由 setup_gpu_env 从 F: 复制）
+vendor/
+
+# Claude Code 本地配置（含本机绝对路径）
+.claude/
+
+# zread 自动生成的 wiki
+.zread/
+
+# 数据文件（保护研究数据，防止误提交）
+data/
+*.xlsx
+*.xls
+*.csv
+*.tsv
+*.parquet
