@@ -79,6 +79,66 @@ tests/smoke_core.py    # 核心管道冒烟测试
 todo.md                # 开发计划与进度
 ```
 
+## 扩展 mealpy 优化器
+
+mealpy 优化器集中在 `app/core/optimize.py` 注册。界面会直接读取其中的
+`METHODS_BY_FAMILY`，因此新增算法通常不需要修改 `app/main.py`，也不需要为每个模型
+重新定义搜索空间；`app/core/space.py` 会把模型已有的声明式搜索空间转换为 mealpy 边界。
+
+下面以新增 WOA（鲸鱼优化算法）为例。
+
+### 1. 注册界面选项
+
+在 `METHODS_BY_FAMILY["mealpy"]` 中增加一项。内部标识必须以 `mealpy_` 开头，
+这样 `optimize()` 才会自动分派到 mealpy 执行路径：
+
+```python
+"mealpy": [
+    # ...已有算法
+    ("mealpy_woa", "WOA 鲸鱼优化"),
+],
+```
+
+### 2. 注册日志显示名称
+
+在 `_MEALPY_ALGORITHM_NAMES` 中加入同一个内部标识：
+
+```python
+_MEALPY_ALGORITHM_NAMES = {
+    # ...已有算法
+    "mealpy_woa": "WOA",
+}
+```
+
+### 3. 创建优化器实例
+
+在 `_build_mealpy_optimizer()` 中增加对应分支：
+
+```python
+if method == "mealpy_woa":
+    from mealpy import WOA
+    return WOA.OriginalWOA(epoch=epoch, pop_size=pop)
+```
+
+保存后，重启程序即可在“mealpy”算法列表中看到 WOA。项目会继续复用统一的 K 折
+交叉验证目标函数、参数解码和最优参数返回逻辑。
+
+不同 mealpy 算法的模块名、类名和必填构造参数可能不同，请以项目当前安装版本的
+mealpy API 为准。如果算法还需要额外参数，就在 `_build_mealpy_optimizer()` 的对应
+分支中一并传入。若内部标识不以 `mealpy_` 开头，还需要额外修改 `optimize()` 的分派条件，
+因此推荐始终遵循 `mealpy_<算法名>` 的命名规则。
+
+完成后可先验证实例是否能创建，再运行核心冒烟测试：
+
+```powershell
+uv run python -c "from app.core.optimize import _build_mealpy_optimizer; print(_build_mealpy_optimizer('mealpy_woa', epoch=5, pop=8))"
+uv run python tests/smoke_core.py
+```
+
+最后在界面中选择新算法，以较小的优化预算运行一次，确认日志中显示正确名称且能返回
+最优参数。mealpy 执行异常时，当前实现会记录警告并回退到 Optuna TPE，验证时应同时检查
+运行日志，避免把回退结果误认为新算法已经正常运行。
+
 ## 测试
 
 ```bash

@@ -31,7 +31,7 @@ from nicegui import ui  # noqa: E402
 from app.core import data as D  # noqa: E402
 from app.core.explain import PLOT_OPTIONS  # noqa: E402
 from app.core.models import list_models  # noqa: E402
-from app.core.optimize import METHODS, OptConfig  # noqa: E402
+from app.core.optimize import METHOD_FAMILIES, METHODS_BY_FAMILY, OptConfig  # noqa: E402
 from app.core.themes import DEFAULT_SCHEME, list_schemes  # noqa: E402
 from app.ui.state import AppConfig, RunState, start_job  # noqa: E402
 
@@ -66,6 +66,8 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
         ".compact-upload .q-uploader__list{display:none}"
         ".compact-upload{max-height:54px}"
         ".compact-upload .q-uploader__header{padding:2px 8px}"
+        ".result-image{aspect-ratio:4/3;background:#f8fafc}"
+        ".result-image .q-img__image{object-fit:contain!important}"
         "</style>"
     )
     ui.query(".nicegui-content").classes("p-0 gap-0")  # 去掉默认外边距，铺满视口
@@ -81,12 +83,15 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
             with ui.card().classes("w-full tightcard"):
                 ui.label("① 数据导入与列配置").classes("sec")
                 with ui.row().classes("w-full gap-2 items-center no-wrap"):
+                    ui.label("数据表文件路径").classes("text-sm whitespace-nowrap")
                     in_path = ui.input(
                         placeholder="粘贴本地 Excel 路径，或用下方上传").props(
                         "dense clearable").classes("flex-1")
-                    ui.button("加载路径", icon="folder_open",
-                              on_click=lambda: _load_path()).props(
-                        "dense unelevated color=primary")
+                    in_path.on(
+                        "keydown",
+                        lambda e: _load_path() if e.args.get("key") == "Enter" else None,
+                        args=["key"],
+                    )
                 ui.upload(label="或拖拽 / 选择 Excel (.xlsx) 上传", auto_upload=True,
                           on_upload=lambda e: _on_upload(e)).props(
                     "accept=.xlsx flat bordered").classes("w-full compact-upload")
@@ -115,8 +120,14 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                         "dense").classes("w-full")
                 with ui.card().classes("tightcard flex-1"):
                     ui.label("③ 参数优化").classes("sec")
-                    sel_method = ui.select({k: v for k, v in METHODS}, value="optuna_tpe",
-                                           label="方法").props("dense").classes("w-full")
+                    with ui.row().classes("w-full gap-2 no-wrap"):
+                        sel_method_family = ui.select(
+                            {k: v for k, v in METHOD_FAMILIES}, value="optuna",
+                            label="优化框架").props("dense").classes("flex-1")
+                        sel_method = ui.select(
+                            {k: v for k, v in METHODS_BY_FAMILY["optuna"]},
+                            value="optuna_tpe", label="算法").props(
+                            "dense").classes("flex-1")
                     with ui.row().classes("w-full gap-2 no-wrap"):
                         in_trials = ui.number("迭代次数", value=30, min=2, step=1).props(
                             "dense").classes("flex-1")
@@ -204,15 +215,15 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                 ui.table.from_pandas(df.head(20)).classes("w-full").props("dense")
             ui.notify(f"已加载 {df.shape[0]} 行 × {df.shape[1]} 列", type="positive")
 
-        def _on_upload(e) -> None:
+        async def _on_upload(e) -> None:
             try:
-                dest = UPLOAD_DIR / e.name
-                dest.write_bytes(e.content.read())
+                dest = UPLOAD_DIR / e.file.name
+                await e.file.save(dest)
                 df = pd.read_excel(dest)
             except Exception as exc:  # noqa: BLE001
                 ui.notify(f"读取失败：{exc}", type="negative")
                 return
-            _apply_df(df, e.name)
+            _apply_df(df, e.file.name)
 
         def _load_path() -> None:
             p = (in_path.value or "").strip().strip('"')
@@ -236,6 +247,15 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
             sel_features.set_options(feats, value=cur or feats)
 
         sel_target.on_value_change(lambda _e: _sync_features())
+
+        def _sync_method_options() -> None:
+            family = sel_method_family.value or "optuna"
+            options = METHODS_BY_FAMILY.get(family, METHODS_BY_FAMILY["optuna"])
+            valid = {key for key, _label in options}
+            value = sel_method.value if sel_method.value in valid else options[0][0]
+            sel_method.set_options({key: label for key, label in options}, value=value)
+
+        sel_method_family.on_value_change(lambda _e: _sync_method_options())
 
         # pushed 记录已推送的日志条数与结果是否已渲染，避免重复
         pushed = {"n": 0, "rendered": False}
@@ -286,9 +306,9 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
         def _render_item(it: dict) -> None:
             # 单个输出卡片：图片直接预览，其它文件（如 xlsx）显示文件图标；均可下载
             path = it["path"]
-            with ui.column().classes("items-center gap-1 border rounded p-1"):
+            with ui.column().classes("w-full items-center gap-1 border rounded p-1"):
                 if path.lower().endswith(IMG_EXT):
-                    ui.image(Path(path)).classes("w-full").style("max-height:150px;object-fit:contain")
+                    ui.image(Path(path)).props("fit=contain").classes("w-full result-image")
                 else:
                     ui.icon("description").classes("text-4xl text-gray-500")
                 ui.label(it["label"]).classes("cap text-center")

@@ -7,7 +7,7 @@
 - ``optuna_cmaes``  Optuna + CMA-ES 进化采样；
 - ``grid``          GridSearchCV 网格搜索；
 - ``random``        RandomizedSearchCV 随机搜索；
-- ``pso``           mealpy 粒子群（元启发式）。
+- ``mealpy_*``      mealpy 元启发式算法。
 
 所有方法都通过 ``Pipeline([Preprocessor, model])`` 做 K 折交叉验证，保证**无数据泄漏**。
 """
@@ -29,16 +29,41 @@ from . import space as space_mod
 from .data import DataConfig, Preprocessor
 from .models import ModelSpec
 
-# UI 可见的方法清单：(key, 中文名)
-METHODS: list[tuple[str, str]] = [
-    ("optuna_tpe", "Optuna · TPE (贝叶斯, 推荐)"),
-    ("optuna_random", "Optuna · 随机采样"),
-    ("optuna_cmaes", "Optuna · CMA-ES 进化"),
-    ("grid", "网格搜索 GridSearch"),
-    ("random", "随机搜索 RandomizedSearch"),
-    ("pso", "粒子群 PSO (mealpy)"),
-    ("manual", "手动 / 默认参数 (不搜索)"),
+# UI 可见的方法清单：先选优化框架，再选具体算法。
+METHOD_FAMILIES: list[tuple[str, str]] = [
+    ("optuna", "Optuna"),
+    ("mealpy", "mealpy"),
 ]
+
+METHODS_BY_FAMILY: dict[str, list[tuple[str, str]]] = {
+    "optuna": [
+        ("optuna_tpe", "TPE 贝叶斯采样（推荐）"),
+        ("optuna_random", "随机采样"),
+        ("optuna_cmaes", "CMA-ES 进化采样"),
+    ],
+    "mealpy": [
+        ("mealpy_pso", "PSO 粒子群优化"),
+        ("mealpy_gwo", "GWO 灰狼优化"),
+        ("mealpy_hho", "HHO 哈里斯鹰优化"),
+        ("mealpy_aro", "ARO 人工兔优化"),
+        ("mealpy_info", "INFO 向量均值优化"),
+    ],
+}
+
+METHODS: list[tuple[str, str]] = [
+    (key, f"{dict(METHOD_FAMILIES)[family]} · {label}")
+    for family, options in METHODS_BY_FAMILY.items()
+    for key, label in options
+]
+
+_MEALPY_ALGORITHM_NAMES = {
+    "mealpy_pso": "PSO",
+    "mealpy_gwo": "GWO",
+    "mealpy_hho": "HHO",
+    "mealpy_aro": "ARO",
+    "mealpy_info": "INFO",
+    "pso": "PSO",
+}
 
 # scoring：sklearn 评分器名（均为越大越好，内部取负得到待最小化的损失）
 SCORERS = {
@@ -51,7 +76,7 @@ SCORERS = {
 @dataclass
 class OptConfig:
     method: str = "optuna_tpe"
-    n_trials: int = 40        # optuna / random / pso 的预算
+    n_trials: int = 40        # optuna / random / mealpy 的预算
     cv_folds: int = 5
     scoring: str = "rmse"
     random_state: int = 42
@@ -129,9 +154,28 @@ def _run_search(spec, X, y, cfg, opt, randomized, log):
     return {k.replace("model__", "", 1): v for k, v in search.best_params_.items()}
 
 
-def _run_pso(spec, X, y, cfg, opt, log):
-    """粒子群优化：把超参数空间映射为 mealpy 边界，最小化 CV 损失。"""
-    from mealpy import PSO, Problem
+def _build_mealpy_optimizer(method: str, epoch: int, pop: int):
+    if method in {"mealpy_pso", "pso"}:
+        from mealpy import PSO
+        return PSO.OriginalPSO(epoch=epoch, pop_size=pop)
+    if method == "mealpy_gwo":
+        from mealpy import GWO
+        return GWO.OriginalGWO(epoch=epoch, pop_size=pop)
+    if method == "mealpy_hho":
+        from mealpy import HHO
+        return HHO.OriginalHHO(epoch=epoch, pop_size=pop)
+    if method == "mealpy_aro":
+        from mealpy import ARO
+        return ARO.OriginalARO(epoch=epoch, pop_size=pop)
+    if method == "mealpy_info":
+        from mealpy import INFO
+        return INFO.OriginalINFO(epoch=epoch, pop_size=pop)
+    raise ValueError(f"未知 mealpy 算法：{method}")
+
+
+def _run_mealpy(spec, X, y, cfg, opt, log):
+    """mealpy 元启发式优化：把超参数空间映射为边界，最小化 CV 损失。"""
+    from mealpy import Problem
 
     bounds = space_mod.mealpy_bounds(spec.space)  # 由声明式空间生成 mealpy 变量边界
 
@@ -145,7 +189,10 @@ def _run_pso(spec, X, y, cfg, opt, log):
     epoch = max(5, opt.n_trials // 4)
     pop = max(8, min(20, opt.n_trials))
     problem = _P(bounds=bounds, minmax="min", log_to=None)  # 最小化损失
-    model = PSO.OriginalPSO(epoch=epoch, pop_size=pop)
+    model = _build_mealpy_optimizer(opt.method, epoch, pop)
+    if log:
+        log(f"    mealpy·{_MEALPY_ALGORITHM_NAMES.get(opt.method, opt.method)} "
+            f"epoch={epoch}, pop_size={pop}")
     model.solve(problem)
     # g_best.solution 是最优编码解，解码回超参数字典返回
     return dict(problem.decode_solution(model.g_best.solution))
@@ -174,12 +221,13 @@ def optimize(spec: ModelSpec, X, y, cfg: DataConfig, opt: OptConfig, log=None) -
     if method == "random":
         return _run_search(spec, X, y, cfg, opt, randomized=True, log=log)
 
-    if method == "pso":
+    if method == "pso" or method.startswith("mealpy_"):
         try:
-            return _run_pso(spec, X, y, cfg, opt, log)
-        except Exception as exc:  # noqa: BLE001 —— PSO 失败时回退到 TPE
+            return _run_mealpy(spec, X, y, cfg, opt, log)
+        except Exception as exc:  # noqa: BLE001 —— mealpy 失败时回退到 TPE
             if log:
-                log(f"    [警告] PSO 失败 ({type(exc).__name__})，回退到 Optuna·TPE")
+                name = _MEALPY_ALGORITHM_NAMES.get(method, method)
+                log(f"    [警告] mealpy·{name} 失败 ({type(exc).__name__})，回退到 Optuna·TPE")
             import optuna
             return _run_optuna(spec, X, y, cfg, opt,
                                optuna.samplers.TPESampler(seed=opt.random_state), log)
