@@ -17,7 +17,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 
-from .space import Param
+from .space import Param, clone_space, validate_space
 
 RANDOM_STATE = 42
 
@@ -37,6 +37,21 @@ class ModelSpec:
     def build(self, params: dict | None = None):
         params = dict(params or {})
         return self._build({**self.fixed_params, **params})
+
+    def with_space(self, space: list[Param]) -> ModelSpec:
+        """创建带本次运行搜索空间的模型副本，不修改全局注册表。"""
+        validate_space(space)
+        return ModelSpec(
+            key=self.key,
+            name_cn=self.name_cn,
+            _build=self._build,
+            space=clone_space(space),
+            fixed_params=dict(self.fixed_params),
+            default_params=dict(self.default_params),
+            is_tree=self.is_tree,
+            has_native_importance=self.has_native_importance,
+            shap_kind=self.shap_kind,
+        )
 
 
 # --------------------------------------------------------------------------- #

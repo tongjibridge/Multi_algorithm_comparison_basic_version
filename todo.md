@@ -13,7 +13,7 @@
 |---|------|------|
 | R1 | **用户选择模型** | 单选/多选；覆盖现有 15 个算法，支持横向对比 |
 | R2 | **导入 Excel 作为数据源** | 上传 `.xlsx`；可指定特征列/目标列/分类列/不标准化列 |
-| R3 | **选择参数优化方法** | Optuna(TPE/Random/CMA-ES)、GridSearch、RandomizedSearch、mealpy 元启发式、手动/默认参数 |
+| R3 | **选择参数优化方法** | UI 先选 Optuna/mealpy，再选具体算法；后端保留 GridSearch、RandomizedSearch、手动/默认参数兼容路径 |
 | R4 | **选择输出的结果图像 + 保存位置** | 勾选需要的图表种类；指定输出目录；训练后预览并保存 |
 
 ---
@@ -90,112 +90,86 @@ ExplainableML/
 
 ## 四、开发任务（按阶段）
 
+> 状态口径（2026-07-11）：`[x]` 表示当前代码已实现；`[ ]` 表示未实现或仅部分实现。
+
 ### 阶段 0 — 项目脚手架
-- [ ] 用 uv 初始化新工程的 `pyproject.toml`，迁移现有依赖并新增 `nicegui`（去掉仅预测用的 gradio，按需保留）。
-- [ ] 建立 `app/` 目录结构与空模块；配置 logging。
-- [ ] 把 `times+simsun.ttf` 复制到 `app/assets/`，绘图统一加载该字体。
-- [ ] 全局设置 `matplotlib.use("Agg")`。
+- [x] uv 工程、`pyproject.toml`、`app/core/` 与 `app/ui/` 分层。
+- [x] Agg 绘图后端和 `app/assets/times+simsun.ttf` 中文字体。
 
-### 阶段 1 — 核心数据层 `core/data.py` (对应 R2)
-- [ ] Excel 读取（openpyxl），返回列名列表供 UI 配置。
-- [ ] 列配置：目标列、特征列、分类列(索引/列名)、不标准化列。
-- [ ] 复用/封装 `encode.py` 的分类编码（fit/transform 分离，保存 encoder）。
-- [ ] 复用 `tools.data_norm_get` 的标准化逻辑（保存 scaler）。
-- [ ] 数据集划分：KFold（折数可配）或 train/test split；随机种子可配。
-- [ ] 输入校验与友好报错（缺失值、非数值目标、列选择冲突等）。
+### 阶段 1 — 数据层 `core/data.py`
+- [x] Excel 读取、列名提取、目标/特征/分类/不标准化列配置。
+- [x] OrdinalEncoder + StandardScaler，训练集 fit、测试集 transform。
+- [x] train/test split、随机种子、优化层可配置 K 折 CV。
+- [ ] 已校验列冲突、空特征和非数值目标；特征缺失值统一策略待补充。
 
-### 阶段 2 — 模型注册表 `core/models.py` (对应 R1)
-- [ ] 定义统一接口：`build(params) -> estimator`、`default_params`、`search_space(method)`、`capabilities`(是否树模型/原生重要性/SHAP 类型)。
-- [ ] 为每个模型登记上述元数据（从现有各 `*.py` 的 `objective` 提取搜索空间）。
-- [ ] 一期落地 6 树模型 + KNN/SVR/MLP；二期补 TabM/TabPFN/xRFM/Stacking/ELM/Bayesian。
+### 阶段 2 — 模型注册表 `core/models.py`
+- [x] `ModelSpec` 统一构建器、默认参数、搜索空间和解释能力。
+- [x] 9 个稳定模型：6 树模型 + KNN/SVR/MLP。
+- [x] 可选 TabPFN 已注册（懒加载、无原生重要性、尚未实跑）；共 10 个注册模型。
+- [ ] TabM、xRFM、Stacking、ELM、贝叶斯岭回归待迁移。
 
-### 阶段 3 — 参数优化层 `core/optimize.py` (对应 R3)
-- [ ] 统一优化接口：`optimize(model_key, X, y, method, n_trials/iters, cv) -> best_params`。
-- [ ] 适配器：
-  - [ ] Optuna —— TPESampler / RandomSampler / CmaEsSampler（复用现有 `objective` 模式）。
-  - [ ] GridSearchCV / RandomizedSearchCV（sklearn）。
-  - [ ] mealpy 元启发式（PSO 等，参考 `XGBoost_mealpy.py` 的 `Problem` 封装）。
-  - [ ] 手动/默认参数（跳过搜索）。
-- [ ] 统一目标函数（默认 5 折 CV + `mean_pinball_loss` 或 RMSE，可选）。
+### 阶段 3 — 优化层 `core/optimize.py`
+- [x] 统一优化接口、预算、CV、评分和随机种子。
+- [x] Optuna：TPE / Random / CMA-ES。
+- [x] mealpy：PSO / GWO / HHO / ARO / INFO。
+- [x] 后端保留 Grid / Random / Manual；当前 UI 不展示。
+- [x] CV 内拟合预处理器，支持 RMSE / MAE / R²。
 
-### 阶段 4 — 统一训练管道 `core/pipeline.py`
-- [ ] 串联：数据划分 → 编码 → 标准化 → 优化得最优参 → 训练最终模型 → 训练/测试预测。
-- [ ] 计算并返回指标（`core/metrics.py`）。
-- [ ] 导出缩放后/未缩放结果表到 xlsx（参考现有逻辑）。
-- [ ] 多模型批量运行 + 汇总对比表（指标横向对比）。
+### 阶段 4 — 训练管道
+- [x] 数据划分 → 预处理 → 优化 → 训练 → 预测。
+- [x] MSE / RMSE / MAE / R² 训练与测试指标。
+- [x] 训练/测试预测 xlsx 和多模型指标对比。
 
-### 阶段 5 — 绘图与可解释性 `core/plots.py` + `core/explain.py` (对应 R4)
-- [ ] 将 `tools.py` 全部绘图函数重构为模型无关、参数化（保存路径/标题/字体/dpi）。
-- [ ] 按"图表种类"组织为可勾选清单：
-  - [ ] 回归拟合图（训练/测试）
-  - [ ] 特征重要性（原生 / 置换 / SHAP）
-  - [ ] 残差分析图
-  - [ ] PDP / ICE（1D 含置信区间）
-  - [ ] 2D PDP 热力图 / 3D PDP 曲面 / 3D 散点 / 固定值 3D PDP
-  - [ ] SHAP：summary(条形+散点)、dependence、waterfall、interaction 热力图、interaction dependence
-  - [ ] ALE（1D / 2D）
-- [ ] `explain.py` 按模型能力自动选择 SHAP 解释器（Tree vs Kernel）并对非树模型给出回退方案。
-- [ ] 输出格式可配（png/svg/pdf）、dpi 可配。
+### 阶段 5 — 绘图与解释
+- [x] 拟合图、残差图、原生/置换/SHAP 重要性。
+- [x] SHAP summary / dependence / waterfall。
+- [x] 1D PDP/ICE、2D PDP、ALE 1D；支持 png/svg/pdf、dpi、Top-K 和配色。
+- [x] TreeExplainer / KernelExplainer 自动分派及非树模型回退。
+- [ ] 1D PDP 置信区间、3D PDP/散点、SHAP interaction、ALE 2D 待实现。
 
-### 阶段 6 — NiceGUI 前端 `app/ui/` (整合 R1–R4)
-- [ ] 分步向导式布局：① 数据导入与列配置 → ② 模型选择 → ③ 优化方法与参数 → ④ 图表勾选与保存位置 → ⑤ 运行。
-- [ ] 文件上传组件（Excel）；列选择下拉/多选；数据预览表格。
-- [ ] 模型多选 + 优化方法选择 + 试验次数/折数等参数输入。
-- [ ] 图表勾选清单 + 输出目录选择（本地路径输入/选择）+ 图片格式/dpi。
-- [ ] "开始运行"→ 后台线程执行（`ui/tasks.py`），实时进度条 + 日志输出，避免阻塞。
-- [ ] 结果区：指标对比表 + 生成图像画廊预览 + "打开输出目录"。
-- [ ] 异常捕获与用户提示。
+### 阶段 6 — NiceGUI 前端
+- [x] 数据、模型、优化、输出、运行五步单页流程。
+- [x] Excel 上传、本地路径回车加载、列配置和数据预览。
+- [x] 模型多选、Optuna/mealpy 两级下拉、预算/CV/评分。
+- [x] 后台线程、进度、日志、指标表、下载和打开输出目录。
+- [x] 4:3 结果容器 + contain 等比例完整预览。
 
-### 阶段 7 — 集成、测试与文档
-- [ ] 用 `database2.xlsx` 做端到端冒烟测试（至少 1 树模型 + 1 非树模型，跑通全流程）。
-- [ ] 核心层单元测试（data/optimize/pipeline 的关键路径）。
-- [ ] 编写运行说明（`uv run` 启动方式）、更新 README。
-- [ ] 性能：大数据集/慢解释器的超时与可取消机制。
+### 阶段 7 — 测试与文档
+- [x] 冒烟测试覆盖 RF（树）+ KNN（非树）的训练、解释和指标对比。
+- [x] README 包含安装、启动、操作、测试和 mealpy 扩展说明。
+- [ ] data/optimize/pipeline 单元测试待补充。
+- [ ] KernelExplainer 已下采样；长任务取消、超时和完整性能策略待实现。
 
 ---
 
 ## 五、当前任务进度
 
-- [x] **任务1**：分析项目，规划开发任务并输出到 `todo.md`（本文件）。
-- [x] **任务2**：在 `ExplainableML/` 内建立无远程的 git 仓库，并通过 `.gitignore` 忽略 `Multi_algorithm_comparison_basic_version/`。
+### 当前实现快照（2026-07-11）
+- [x] 阶段 0–4：脚手架、数据、10 个注册模型、优化器和训练管道。
+- [x] 阶段 5（部分）：常用解释图、PDP/ICE、2D PDP、ALE 1D 和结果表。
+- [x] 阶段 6：NiceGUI 完整主流程、后台运行、日志、指标和画廊。
+- [x] 阶段 7（部分）：RF + KNN 核心冒烟测试、README、浏览器交互验证。
+- [x] 最近更新：两级优化器下拉、5 个 mealpy 算法、4:3 完整图片预览、路径回车加载。
 
-### 一期 MVP 开发进度（2026-06-11，已端到端验证）
-
-- [x] **阶段0** 脚手架：uv + Python 3.11、`app/` 分层、Agg 后端、中文字体。
-- [x] **阶段1** 数据层 `data.py`：Excel 读取、列配置、`Preprocessor`（编码+标准化，防泄漏）、划分。
-- [x] **阶段2** 模型注册表 `models.py`：9 个模型（声明式搜索空间 `space.py`）。
-- [x] **阶段3** 优化层 `optimize.py`：Optuna(TPE/随机/CMA-ES) / Grid / Random / PSO / 手动。
-- [x] **阶段4** 训练管道 `pipeline.py`：统一流程 + 指标 + 多模型对比表。
-- [x] **阶段5** 绘图与解释 `plots.py` / `explain.py`：拟合/残差/重要性(原生·置换·SHAP)/SHAP摘要·依赖·瀑布/PDP·ICE/2D PDP/ALE/结果表。
-- [x] **阶段6** NiceGUI 前端 `main.py`：①数据(上传+本地路径) ②模型 ③优化 ④图表+保存 ⑤运行(后台线程+进度+日志+画廊)。
-- [x] **阶段7（部分）** 冒烟测试 `tests/smoke_core.py`、README、浏览器端到端验证（XGBoost+RF 跑通，输出各 9 项）。
-
-> 验证结果：默认数据集上 XGBoost 测试 R²≈0.79、RF≈0.78；UI 完整渲染、图像/指标/下载正常。
-
-- [x] **配色方案** `themes.py`：参考 nature-figure 技能定义 5 组期刊级配色（Nature 经典蓝红 / Nature 暖冷对比 / NMI 低饱和蓝紫 / 材料青紫 / 临床多色），每组含离散色板 + 连续 colormap，UI"④"可选，统一应用到拟合/重要性/残差/PDP/SHAP/ALE 各图。
-- [x] **拟合图升级**：`regression_fit` 改为参考 `plot_regression_fit2` 的五面板布局（主散点 + 真实/预测边际直方图 + 残差散点 + 残差直方图）。
-
-### 后续（二期 / 待办）
-
-- [ ] 核心层单元测试（data/optimize/pipeline 关键路径，pytest）。
-- [ ] 长任务的"取消/超时"机制；KernelExplainer 大数据下的性能优化。
-- [x] **TabPFN**（二期·首个）：已在 `models.py` 注册（懒加载、自动选 GPU、空搜索空间不调参）。
-  - 环境照搬参考 `F:\…\.venv`：Python 3.10 + torch 1.12.1+cu113 + tabpfn 2.2.1，tabpfn-extensions 复制源码到 `vendor/` 以 `--no-deps` 安装；一键脚本 `setup_gpu_env.bat/.sh`。
-  - ⚠️ tabpfn/extensions 声明 torch≥2.1，与 1.12.1 冲突，故 `--no-deps` 绕过（与参考环境一致）；装完勿再 `uv sync`（会被裁剪）。
-  - ⚠️ 尚未实跑/测试 TabPFN 训练与推理（运行慢，按要求只改代码）。SHAP/PDP 对 TabPFN 很慢，建议不勾选或仅用置换重要性。
-- [ ] 二期其余模型：Stacking / ELM / 贝叶斯（轻量，无需 torch）/ TabM / xRFM（需 torch）。
-- [ ] 可选：打包为桌面应用、训练好的模型/解释结果的持久化复用。
+### 后续待办
+- [ ] 特征缺失值处理和核心单元测试。
+- [ ] 长任务取消/超时与 KernelExplainer 性能优化。
+- [ ] TabPFN 实跑验证；迁移 Stacking / ELM / 贝叶斯岭回归 / TabM / xRFM。
+- [ ] 高级解释图：3D PDP/散点、SHAP interaction、ALE 2D。
+- [ ] 模型、预处理器和解释结果持久化。
+- [ ] 环境对齐：`.python-version` 为 3.10，当前 `.venv` 实测为 Python 3.11.12。
 
 ---
 
-## 六、已确认的决策（2026-06-11）
+## 六、已确认的决策（更新至 2026-07-11）
 
-1. **模型一期范围**：6 树模型（XGBoost/LightGBM/CatBoost/RF/GBR/DT）+ KNN/SVR/MLP，共 **9 个**。TabM/TabPFN/xRFM/Stacking/ELM/Bayesian 列为二期。
-2. **运行形态**：本地浏览器 GUI（NiceGUI 默认），不打包桌面 exe。
-3. **数据假设**：不固定列含义，**完全由用户在界面指定**目标列 / 特征列 / 分类列 / 不标准化列。
-4. **任务类型**：**仅回归**（粘结强度预测）。
+1. **模型范围**：9 个稳定模型 + 1 个可选且未验证的 TabPFN。
+2. **运行形态**：本地浏览器 NiceGUI，不打包桌面 exe。
+3. **数据与任务**：列含义由用户配置，仅支持回归。
+4. **优化器 UI**：仅展示 Optuna 和 mealpy；Grid / Random / Manual 保留为后端兼容路径。
+5. **环境口径**：`pyproject.toml` 支持 Python 3.10–3.12；目标版本为 3.10，当前 `.venv` 为 3.11.12；默认依赖不含 torch。
 
-> 环境：uv + Python 3.11；沿用参考项目的依赖锁定组合（numpy 1.26.4 / scikit-learn 1.5.1 / xgboost 2.0.0 / catboost 1.2.7 / shap 0.42.1 等），不引入 torch。
+---
 
 ## 七、9 个模型的超参数搜索空间（从现有 `objective` 提取）
 

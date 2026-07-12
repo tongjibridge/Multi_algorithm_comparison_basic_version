@@ -11,6 +11,7 @@ from . import data as data_mod
 from . import models as models_mod
 from . import optimize as opt_mod
 from .metrics import regression_metrics
+from .space import Param
 
 
 @dataclass
@@ -38,9 +39,12 @@ def train_one(
     model_key: str,
     opt_cfg: opt_mod.OptConfig,
     log: Callable[[str], None] | None = None,
+    model_space: list[Param] | None = None,
 ) -> TrainResult:
     """训练单个模型并返回完整结果。"""
     spec = models_mod.get(model_key)
+    if model_space is not None:
+        spec = spec.with_space(model_space)
     _log = log or (lambda _m: None)
 
     _log(f"[{spec.name_cn}] 划分数据集 (test_size={data_cfg.test_size})")

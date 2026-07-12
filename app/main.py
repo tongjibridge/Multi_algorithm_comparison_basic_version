@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import ast
 import os
 import sys
 from pathlib import Path
@@ -30,8 +31,9 @@ from nicegui import ui  # noqa: E402
 
 from app.core import data as D  # noqa: E402
 from app.core.explain import PLOT_OPTIONS  # noqa: E402
-from app.core.models import list_models  # noqa: E402
+from app.core.models import get as get_model, list_models  # noqa: E402
 from app.core.optimize import METHOD_FAMILIES, METHODS_BY_FAMILY, OptConfig  # noqa: E402
+from app.core.space import Param, clone_space, validate_space  # noqa: E402
 from app.core.themes import DEFAULT_SCHEME, list_schemes  # noqa: E402
 from app.ui.state import AppConfig, RunState, start_job  # noqa: E402
 
@@ -114,10 +116,14 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
             # ②③ 模型 + 优化（并排）
             with ui.row().classes("w-full gap-2 no-wrap items-stretch"):
                 with ui.card().classes("tightcard").style("width:40%"):
-                    ui.label("② 模型（多选）").classes("sec")
+                    with ui.row().classes("w-full items-center justify-between gap-2 no-wrap"):
+                        ui.label("② 模型（多选）").classes("sec")
+                        params_btn = ui.button("修改模型参数", icon="tune").props(
+                            "flat dense no-caps").classes("text-xs")
                     sel_models = ui.select({k: n for k, n in list_models()}, multiple=True,
                                            value=["xgboost", "random_forest"]).props(
                         "dense").classes("w-full")
+                    params_status = ui.label("").classes("cap text-primary")
                 with ui.card().classes("tightcard flex-1"):
                     ui.label("③ 参数优化").classes("sec")
                     with ui.row().classes("w-full gap-2 no-wrap"):
@@ -192,6 +198,117 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                     ui.label("结果将在运行完成后显示").classes("cap")
 
         # ---------------- 交互逻辑 ---------------- #
+        params_dialog = ui.dialog()
+
+        def _sync_params_status() -> None:
+            selected = set(sel_models.value or [])
+            count = sum(key in selected for key in cfg.model_spaces)
+            params_status.text = f"已自定义 {count} 个已选模型" if count else ""
+
+        sel_models.on_value_change(lambda _e: _sync_params_status())
+
+        def _open_model_params() -> None:
+            """展示所选模型的搜索范围，并把修改保存在本次页面配置中。"""
+            model_keys = list(sel_models.value or [])
+            if not model_keys:
+                ui.notify("尚未选择模型，请先选择模型", type="warning")
+                return
+
+            editors: dict[str, list[tuple[Param, Any, Any, Any]]] = {}
+            params_dialog.clear()
+            with params_dialog, ui.card().classes("w-full").style(
+                    "width:min(900px,92vw);max-height:88vh"):
+                ui.label("修改模型参数范围").classes("text-base font-bold")
+                ui.label(
+                    "数值参数可修改搜索上下限；分类参数请输入 Python 列表格式的候选值。"
+                ).classes("cap")
+                with ui.scroll_area().classes("w-full").style("height:min(64vh,620px)"):
+                    for model_key in model_keys:
+                        spec = get_model(model_key)
+                        current_space = clone_space(cfg.model_spaces.get(model_key, spec.space))
+                        editors[model_key] = []
+                        with ui.expansion(spec.name_cn, value=True).classes("w-full"):
+                            if not current_space:
+                                ui.label("该模型没有可调整的参数范围").classes(
+                                    "cap text-gray-500")
+                                continue
+                            for param in current_space:
+                                with ui.row().classes(
+                                        "w-full items-center gap-2 no-wrap border-b pb-1"):
+                                    ui.label(param.name).classes(
+                                        "text-sm font-medium").style("width:180px")
+                                    if param.kind in {"float", "int"}:
+                                        low = ui.number("下限", value=param.low).props(
+                                            "dense").classes("flex-1")
+                                        high = ui.number("上限", value=param.high).props(
+                                            "dense").classes("flex-1")
+                                        if param.kind == "int":
+                                            low.props("step=1")
+                                            high.props("step=1")
+                                        log = ui.checkbox("对数采样", value=param.log).props(
+                                            "dense")
+                                        if param.kind == "int":
+                                            log.disable()
+                                        editors[model_key].append((param, low, high, log))
+                                    else:
+                                        choices = ui.input(
+                                            "候选值", value=repr(param.choices)
+                                        ).props("dense").classes("flex-1")
+                                        editors[model_key].append((param, choices, None, None))
+
+                def _save_model_params() -> None:
+                    updated: dict[str, list[Param]] = {}
+                    try:
+                        for model_key, rows in editors.items():
+                            new_space: list[Param] = []
+                            for original, first, second, third in rows:
+                                if original.kind in {"float", "int"}:
+                                    low_value = first.value
+                                    high_value = second.value
+                                    if low_value is None or high_value is None:
+                                        raise ValueError(f"参数 {original.name} 必须填写上下限")
+                                    if original.kind == "int":
+                                        low_number = float(low_value)
+                                        high_number = float(high_value)
+                                        if not low_number.is_integer() or not high_number.is_integer():
+                                            raise ValueError(
+                                                f"整数参数 {original.name} 的上下限必须是整数")
+                                        low_value = int(low_number)
+                                        high_value = int(high_number)
+                                    else:
+                                        low_value = float(low_value)
+                                        high_value = float(high_value)
+                                    new_space.append(Param(
+                                        original.name, original.kind,
+                                        low=low_value, high=high_value,
+                                        log=bool(third.value),
+                                    ))
+                                else:
+                                    parsed = ast.literal_eval((first.value or "").strip())
+                                    if not isinstance(parsed, (list, tuple)):
+                                        raise ValueError(
+                                            f"参数 {original.name} 的候选值必须是列表")
+                                    new_space.append(Param(
+                                        original.name, "cat", choices=list(parsed)))
+                            validate_space(new_space)
+                            updated[model_key] = new_space
+                    except (SyntaxError, ValueError, TypeError) as exc:
+                        ui.notify(f"参数范围有误：{exc}", type="negative")
+                        return
+
+                    cfg.model_spaces.update(updated)
+                    _sync_params_status()
+                    params_dialog.close()
+                    ui.notify("模型参数范围已保存，将用于本次运行", type="positive")
+
+                with ui.row().classes("w-full justify-end gap-2"):
+                    ui.button("取消", on_click=params_dialog.close).props("flat")
+                    ui.button("保存", icon="save", on_click=_save_model_params)
+
+            params_dialog.open()
+
+        params_btn.on_click(_open_model_params)
+
         def _apply_df(df: pd.DataFrame, name: str) -> None:
             cfg.df = df
             cfg.excel_name = name
@@ -353,7 +470,9 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
             with results_card:
                 ui.label("运行中，请稍候…").classes("cap")
             ui.notify(f"开始训练 {len(models)} 个模型…", type="info")
-            start_job(cfg.df, data_cfg, models, opt_cfg, plots_sel, out_dir,
+            start_job(cfg.df, data_cfg, models, opt_cfg,
+                      {key: clone_space(space) for key, space in cfg.model_spaces.items()},
+                      plots_sel, out_dir,
                       sel_fmt.value, int(in_dpi.value), int(in_topk.value),
                       sel_scheme.value, state)
 

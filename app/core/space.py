@@ -10,7 +10,9 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
+from math import isfinite
 from typing import Any
 
 import numpy as np
@@ -24,6 +26,39 @@ class Param:
     high: float | None = None
     log: bool = False
     choices: list[Any] | None = None
+
+
+def clone_space(space: list[Param]) -> list[Param]:
+    """返回可安全修改的搜索空间副本。"""
+    return deepcopy(space)
+
+
+def validate_space(space: list[Param]) -> None:
+    """校验用户自定义的搜索空间，失败时给出可直接展示的中文错误。"""
+    names: set[str] = set()
+    for param in space:
+        if param.name in names:
+            raise ValueError(f"参数 {param.name} 重复")
+        names.add(param.name)
+
+        if param.kind in {"float", "int"}:
+            if param.low is None or param.high is None:
+                raise ValueError(f"参数 {param.name} 必须填写上下限")
+            if not isfinite(float(param.low)) or not isfinite(float(param.high)):
+                raise ValueError(f"参数 {param.name} 的上下限必须是有限数值")
+            if float(param.low) >= float(param.high):
+                raise ValueError(f"参数 {param.name} 的下限必须小于上限")
+            if param.kind == "int" and (
+                float(param.low) != int(param.low) or float(param.high) != int(param.high)
+            ):
+                raise ValueError(f"整数参数 {param.name} 的上下限必须是整数")
+            if param.log and float(param.low) <= 0:
+                raise ValueError(f"对数采样参数 {param.name} 的下限必须大于 0")
+        elif param.kind == "cat":
+            if not param.choices:
+                raise ValueError(f"参数 {param.name} 至少需要一个候选值")
+        else:
+            raise ValueError(f"参数 {param.name} 的类型 {param.kind!r} 不受支持")
 
 
 # --------------------------------------------------------------------------- #

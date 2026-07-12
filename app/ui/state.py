@@ -17,6 +17,7 @@ from app.core import explain as explain_mod
 from app.core import pipeline as pipeline_mod
 from app.core.data import DataConfig
 from app.core.optimize import OptConfig
+from app.core.space import Param
 
 
 @dataclass
@@ -26,6 +27,7 @@ class AppConfig:
     df: pd.DataFrame | None = None
     excel_name: str = ""
     columns: list[str] = field(default_factory=list)
+    model_spaces: dict[str, list[Param]] = field(default_factory=dict)
 
 
 @dataclass
@@ -59,6 +61,7 @@ def run_job(
     data_cfg: DataConfig,
     model_keys: list[str],
     opt_cfg: OptConfig,
+    model_spaces: dict[str, list[Param]],
     selected_plots: list[str],
     out_dir: str,
     fmt: str,
@@ -76,7 +79,10 @@ def run_job(
         for i, key in enumerate(model_keys):
             state.stage = f"训练模型 {i + 1}/{n}：{key}"
             state.log(f"\n========== 模型 {i + 1}/{n}：{key} ==========")
-            r = pipeline_mod.train_one(df, data_cfg, key, opt_cfg, state.log)
+            r = pipeline_mod.train_one(
+                df, data_cfg, key, opt_cfg, state.log,
+                model_space=model_spaces.get(key),
+            )
             results.append(r)
             state.log("  生成图表与输出…")
             outs = explain_mod.generate(r, selected_plots, out_dir, fmt, dpi, top_k,
