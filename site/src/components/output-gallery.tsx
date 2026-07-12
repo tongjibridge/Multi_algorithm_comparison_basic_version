@@ -4,13 +4,15 @@ import {
   ScatterChart,
 } from "lucide-react"
 
+const BASE = import.meta.env.BASE_URL
+
 const plotItems = [
-  { title: "SHAP Summary", kind: "shap", image: "/images/shap-summary.png" },
-  { title: "PDP · ICE", kind: "pdp", image: "/images/pdp-ice.png" },
-  { title: "ALE", kind: "ale", image: "/images/ale.png" },
-  { title: "残差分析", kind: "residual", image: "/images/residuals.png" },
-  { title: "特征重要性", kind: "importance", image: "/images/importance-shap.png" },
-  { title: "回归拟合", kind: "fit", image: "/images/regression-fit.png" },
+  { title: "SHAP Summary", kind: "shap", image: `${BASE}/images/shap-summary.png` },
+  { title: "PDP · ICE", kind: "pdp", image: `${BASE}/images/pdp-ice.png` },
+  { title: "ALE", kind: "ale", image: `${BASE}/images/ale.png` },
+  { title: "残差分析", kind: "residual", image: `${BASE}/images/residuals.png` },
+  { title: "特征重要性", kind: "importance", image: `${BASE}/images/importance-shap.png` },
+  { title: "回归拟合", kind: "fit", image: `${BASE}/images/regression-fit.png` },
 ]
 
 function PlotThumbnail({ image }: { image: string }) {

@@ -6,11 +6,13 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+const workbenchImage = `${import.meta.env.BASE_URL}/images/workbench.png`
+
 export function WorkbenchPreview() {
   return (
     <Card className="workbench workbench-screenshot" aria-label="ExplainableML 工作台预览">
       <img
-        src="/images/workbench.png"
+        src={workbenchImage}
         alt="ExplainableML 工作台界面"
         className="workbench-image"
       />

@@ -13,12 +13,14 @@ import {
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 
+const BASE = import.meta.env.BASE_URL
+
 const steps = [
   { title: "导入 Excel", description: "指定目标、特征与分类列" },
   { title: "选择模型", description: "一次勾选多个回归模型" },
-  { title: "设置优化", description: "Optuna、mealpy 与自定义搜索空间", image: "/images/params.png" },
-  { title: "选择输出", description: "SHAP、PDP、ALE 与结果表", image: "/images/gallery.png" },
-  { title: "运行与比较", description: "查看日志、指标和图像画廊", image: "/images/workbench.png" },
+  { title: "设置优化", description: "Optuna、mealpy 与自定义搜索空间", image: `${BASE}/images/params.png` },
+  { title: "选择输出", description: "SHAP、PDP、ALE 与结果表", image: `${BASE}/images/gallery.png` },
+  { title: "运行与比较", description: "查看日志、指标和图像画廊", image: `${BASE}/images/workbench.png` },
 ]
 
 export function WorkflowSection() {
