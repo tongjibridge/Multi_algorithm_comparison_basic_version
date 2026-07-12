@@ -13,20 +13,16 @@ import {
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 
-const BASE = import.meta.env.BASE_URL
-
 const steps = [
   { title: "导入 Excel", description: "指定目标、特征与分类列" },
   { title: "选择模型", description: "一次勾选多个回归模型" },
-  { title: "设置优化", description: "Optuna、mealpy 与自定义搜索空间", image: `${BASE}/images/params.png` },
-  { title: "选择输出", description: "SHAP、PDP、ALE 与结果表", image: `${BASE}/images/gallery.png` },
-  { title: "运行与比较", description: "查看日志、指标和图像画廊", image: `${BASE}/images/workbench.png` },
+  { title: "设置优化", description: "Optuna、mealpy 与自定义搜索空间" },
+  { title: "选择输出", description: "SHAP、PDP、ALE 与结果表" },
+  { title: "运行与比较", description: "查看日志、指标和图像画廊" },
 ]
 
 export function WorkflowSection() {
   const [activeStep, setActiveStep] = useState(2)
-
-  const currentStep = steps[activeStep]
 
   return (
     <section className="workflow-section" id="workflow">
@@ -65,35 +61,25 @@ export function WorkflowSection() {
         <div className="workflow-detail">
           <Card className="parameter-card">
             <CardHeader>
-              <CardTitle>{currentStep.title}</CardTitle>
-              <CardDescription>{currentStep.description}</CardDescription>
+              <CardTitle>{steps[activeStep].title}</CardTitle>
+              <CardDescription>{steps[activeStep].description}</CardDescription>
               <CardAction>
                 <span className="step-counter">0{activeStep + 1} / 05</span>
               </CardAction>
             </CardHeader>
-            <CardContent className="workflow-preview-content">
-              {currentStep.image ? (
-                <img
-                  src={currentStep.image}
-                  alt={`${currentStep.title} 预览`}
-                  className="workflow-preview-image"
-                />
-              ) : (
-                <>
-                  <div className="parameter-head">
-                    <span>参数</span>
-                    <span>下限</span>
-                    <span>上限</span>
-                    <span>对数采样</span>
-                  </div>
-                  <div className="parameter-row">
-                    <span>learning_rate</span>
-                    <span>0.01</span>
-                    <span>0.30</span>
-                    <Switch defaultChecked aria-label="启用对数采样" />
-                  </div>
-                </>
-              )}
+            <CardContent>
+              <div className="parameter-head">
+                <span>参数</span>
+                <span>下限</span>
+                <span>上限</span>
+                <span>对数采样</span>
+              </div>
+              <div className="parameter-row">
+                <span>learning_rate</span>
+                <span>0.01</span>
+                <span>0.30</span>
+                <Switch defaultChecked aria-label="启用对数采样" />
+              </div>
             </CardContent>
             <CardFooter>
               <span>搜索空间仅作用于本次运行</span>
