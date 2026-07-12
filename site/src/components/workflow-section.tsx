@@ -1,24 +1,41 @@
 import { useState } from "react"
-import { ArrowRight, Check } from "lucide-react"
+import { Check } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
 
 const steps = [
-  { title: "导入 Excel", description: "指定目标、特征与分类列" },
-  { title: "选择模型", description: "一次勾选多个回归模型" },
-  { title: "设置优化", description: "Optuna、mealpy 与自定义搜索空间" },
-  { title: "选择输出", description: "SHAP、PDP、ALE 与结果表" },
-  { title: "运行与比较", description: "查看日志、指标和图像画廊" },
+  {
+    title: "导入 Excel",
+    description: "指定目标、特征与分类列",
+    detail: "上传你的 Excel 数据文件，系统会自动解析所有列。选择你的目标变量（预测对象）、特征列（输入变量），如果是分类问题，还需指定分类列。支持 .xlsx 和 .csv 格式。"
+  },
+  {
+    title: "选择模型",
+    description: "一次勾选多个回归模型",
+    detail: "内置多种主流回归算法：线性回归、随机森林、梯度提升树（XGBoost/LightGBM）、支持向量机等。你可以同时勾选多个模型，系统会自动并行训练并生成对比结果。"
+  },
+  {
+    title: "设置优化",
+    description: "Optuna、mealpy 与自定义搜索空间",
+    detail: "自动超参数调优，支持 Optuna（基于 TPE 算法）和 mealpy（元启发式算法）。你也可以手动定义每个参数的搜索范围，设置上下界、采样方式（线性/对数），让模型找到最优配置。"
+  },
+  {
+    title: "选择输出",
+    description: "SHAP、PDP、ALE 与结果表",
+    detail: "选择模型解释性分析方式：SHAP 值展示每个特征的贡献度，PDP（部分依赖图）显示特征与预测的关系，ALE（累积局部效应）处理特征相关性。同时导出详细的性能指标结果表。"
+  },
+  {
+    title: "运行与比较",
+    description: "查看日志、指标和图像画廊",
+    detail: "一键运行训练流程，实时查看优化日志。训练完成后，进入结果画廊对比各模型表现 — R²、RMSE、MAE 等指标一目了然，所有可解释性图表集中展示，方便决策。"
+  },
 ]
 
 export function WorkflowSection() {
@@ -68,25 +85,8 @@ export function WorkflowSection() {
               </CardAction>
             </CardHeader>
             <CardContent>
-              <div className="parameter-head">
-                <span>参数</span>
-                <span>下限</span>
-                <span>上限</span>
-                <span>对数采样</span>
-              </div>
-              <div className="parameter-row">
-                <span>learning_rate</span>
-                <span>0.01</span>
-                <span>0.30</span>
-                <Switch defaultChecked aria-label="启用对数采样" />
-              </div>
+              <p className="step-detail-text">{steps[activeStep].detail}</p>
             </CardContent>
-            <CardFooter>
-              <span>搜索空间仅作用于本次运行</span>
-              <Button size="sm">
-                保存 <ArrowRight data-icon="inline-end" />
-              </Button>
-            </CardFooter>
           </Card>
         </div>
       </div>
