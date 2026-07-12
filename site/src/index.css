@@ -264,6 +264,39 @@
   box-shadow: 0 24px 60px rgba(32, 76, 132, 0.16), 0 3px 12px rgba(36, 72, 112, 0.08);
 }
 
+.workbench-screenshot {
+  overflow: hidden;
+  border-radius: 12px;
+  background: #0f172a;
+}
+
+.workbench-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.workbench-header-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 16px 18px;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.85), transparent);
+  pointer-events: none;
+}
+
+.workbench-header-overlay * {
+  color: white !important;
+  pointer-events: none;
+}
+
+.workbench-header-overlay .window-dots i {
+  background: rgba(255, 255, 255, 0.7);
+}
+
 .workbench-header {
   border-bottom: 1px solid var(--line);
 }
