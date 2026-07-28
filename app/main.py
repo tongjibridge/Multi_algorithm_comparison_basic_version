@@ -52,39 +52,63 @@ IMG_EXT = (".png", ".jpg", ".jpeg")
 
 @ui.page("/")
 def index() -> None:  # noqa: C901 —— 单页应用，集中构建
-    # 紧凑样式：缩小字号/卡片内边距/控件高度，让全部组件在单屏内可见
+    # 桌面工作台样式：保证字号、控件高度和卡片留白，内容由栏内滚动承载
     ui.add_head_html(
         "<style>"
-        ".cap{font-size:.72rem;color:#666;line-height:1.15}"
-        ".sec{font-size:.82rem;font-weight:600}"
-        # 显式边框：Quasar 卡片默认靠 box-shadow，会被列的 overflow:hidden 裁掉左右阴影，
-        # 导致 Chrome/Edge 下左右边界不可见；改用实线边框（画在元素边缘，不被裁剪）保证一致
-        ".tightcard{padding:8px!important;gap:4px!important;"
-        "border:1px solid #dfe3e8;box-shadow:0 1px 3px rgba(0,0,0,.06)}"
-        ".q-field--dense .q-field__control{min-height:34px}"
-        ".pchk .q-checkbox__label{font-size:.72rem;line-height:1}"
-        # 压缩上传组件：隐藏"0.0B/0.00%"副标题与文件列表，限制高度
+        ":root{--app-bg:#f4f7fb;--app-surface:#fff;--app-border:#dbe3ec;"
+        "--app-text:#172033;--app-muted:#64748b;--app-primary:#2563eb}"
+        "body{background:var(--app-bg);color:var(--app-text);font-family:Inter,"
+        "'Segoe UI','Microsoft YaHei UI','PingFang SC',sans-serif;"
+        "font-size:15px;line-height:1.5}"
+        ".app-title{font-size:1.25rem;font-weight:700;line-height:1.4;"
+        "letter-spacing:-.01em}"
+        ".cap{font-size:.82rem;color:var(--app-muted);line-height:1.5}"
+        ".sec{font-size:.96rem;font-weight:650;line-height:1.45;"
+        "color:var(--app-text);white-space:nowrap}"
+        # 显式边框：避免列容器裁剪卡片阴影后，左右边界不可见
+        ".tightcard{padding:16px!important;gap:12px!important;"
+        "border-radius:12px!important;border:1px solid var(--app-border);"
+        "background:var(--app-surface);box-shadow:0 4px 14px rgba(15,23,42,.05);flex-shrink:0}"
+        ".q-field--dense .q-field__control{min-height:40px}"
+        ".q-field__native,.q-field__input{font-size:.9rem;line-height:1.45}"
+        ".q-field__label{font-size:.82rem}"
+        ".q-btn{min-height:38px;padding:0 14px;font-size:.875rem}"
+        ".params-btn{min-height:34px;padding:0 6px!important;font-size:.8rem!important}"
+        ".params-btn .q-btn__content{flex-wrap:nowrap!important;white-space:nowrap}"
+        ".pchk{min-height:34px}"
+        ".pchk .q-checkbox__label{font-size:.82rem;line-height:1.35}"
+        # 上传组件保留必要状态，但控制整体高度
         ".compact-upload .q-uploader__subtitle{display:none}"
         ".compact-upload .q-uploader__list{display:none}"
-        ".compact-upload{max-height:54px}"
-        ".compact-upload .q-uploader__header{padding:2px 8px}"
+        ".compact-upload{max-height:72px;border-radius:10px}"
+        ".compact-upload .q-uploader__header{padding:8px 12px}"
+        ".workspace-shell{gap:16px;padding:16px}"
+        ".app-pane{gap:16px;padding-right:4px;overflow-y:auto;"
+        "scrollbar-gutter:stable}"
+        ".data-preview{min-height:260px}"
+        ".results-panel{min-height:420px}"
         ".result-image{aspect-ratio:4/3;background:#f8fafc}"
         ".result-image .q-img__image{object-fit:contain!important}"
+        "@media(max-width:1100px){"
+        ".workspace-shell{height:auto!important;min-height:100vh;"
+        "flex-direction:column!important}"
+        ".app-pane{overflow:visible!important;width:100%}"
+        ".results-panel{min-height:520px}}"
         "</style>"
     )
     ui.query(".nicegui-content").classes("p-0 gap-0")  # 去掉默认外边距，铺满视口
 
-    with ui.row().classes("w-full no-wrap gap-2 p-2").style(
+    with ui.row().classes("w-full no-wrap workspace-shell").style(
             "height:100vh;box-sizing:border-box"):
         # ============== 左栏：配置（①②③④）+ 数据预览 ============== #
-        with ui.column().classes("gap-2 h-full").style(
-                "flex:1 1 0;min-width:0;overflow:hidden"):
-            ui.label("可解释机器学习 · 训练与解释").classes("text-base font-bold")
+        with ui.column().classes("h-full app-pane").style(
+                "flex:1 1 0;min-width:0"):
+            ui.label("可解释机器学习 · 训练与解释").classes("app-title")
 
             # ① 数据导入与列配置
             with ui.card().classes("w-full tightcard"):
                 ui.label("① 数据导入与列配置").classes("sec")
-                with ui.row().classes("w-full gap-2 items-center no-wrap"):
+                with ui.row().classes("w-full gap-3 items-center no-wrap"):
                     ui.label("数据表文件路径").classes("text-sm whitespace-nowrap")
                     in_path = ui.input(
                         placeholder="粘贴本地 Excel 路径，或用下方上传").props(
@@ -98,35 +122,35 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                           on_upload=lambda e: _on_upload(e)).props(
                     "accept=.xlsx flat bordered").classes("w-full compact-upload")
                 summary_lbl = ui.label("尚未加载数据").classes("cap")
-                with ui.row().classes("w-full gap-2 no-wrap"):
+                with ui.row().classes("w-full gap-3 no-wrap"):
                     sel_target = ui.select([], label="目标列").props("dense").classes("flex-1")
                     sel_features = ui.select([], label="特征列", multiple=True).props(
                         "dense").classes("flex-1")
-                with ui.row().classes("w-full gap-2 no-wrap"):
+                with ui.row().classes("w-full gap-3 no-wrap"):
                     sel_cat = ui.select([], label="分类列", multiple=True).props(
                         "dense").classes("flex-1")
                     sel_nonstd = ui.select([], label="不标准化列", multiple=True).props(
                         "dense").classes("flex-1")
-                with ui.row().classes("gap-2 no-wrap items-center"):
+                with ui.row().classes("gap-3 no-wrap items-center"):
                     in_test = ui.number("测试集比例", value=0.2, min=0.05, max=0.9,
                                         step=0.05).props("dense").classes("w-28")
                     in_seed = ui.number("随机种子", value=42, min=0, step=1).props(
                         "dense").classes("w-28")
 
-            # ②③ 模型 + 优化（并排）
-            with ui.row().classes("w-full gap-2 no-wrap items-stretch"):
+            # ②③ 模型 + 优化（同一行呈现，保留舒适间距）
+            with ui.row().classes("w-full gap-4 no-wrap items-stretch"):
                 with ui.card().classes("tightcard").style("width:40%"):
-                    with ui.row().classes("w-full items-center justify-between gap-2 no-wrap"):
+                    with ui.row().classes("w-full items-center justify-between gap-3 no-wrap"):
                         ui.label("② 模型（多选）").classes("sec")
-                        params_btn = ui.button("修改模型参数", icon="tune").props(
-                            "flat dense no-caps").classes("text-xs")
+                        params_btn = ui.button("模型参数", icon="tune").props(
+                            "flat dense no-caps").classes("params-btn")
                     sel_models = ui.select({k: n for k, n in list_models()}, multiple=True,
                                            value=["xgboost", "random_forest"]).props(
                         "dense").classes("w-full")
                     params_status = ui.label("").classes("cap text-primary")
                 with ui.card().classes("tightcard flex-1"):
                     ui.label("③ 参数优化").classes("sec")
-                    with ui.row().classes("w-full gap-2 no-wrap"):
+                    with ui.row().classes("w-full gap-3 no-wrap"):
                         sel_method_family = ui.select(
                             {k: v for k, v in METHOD_FAMILIES}, value="optuna",
                             label="优化框架").props("dense").classes("flex-1")
@@ -134,7 +158,7 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                             {k: v for k, v in METHODS_BY_FAMILY["optuna"]},
                             value="optuna_tpe", label="算法").props(
                             "dense").classes("flex-1")
-                    with ui.row().classes("w-full gap-2 no-wrap"):
+                    with ui.row().classes("w-full gap-3 no-wrap"):
                         in_trials = ui.number("迭代次数", value=30, min=2, step=1).props(
                             "dense").classes("flex-1")
                         in_cv = ui.number("CV折数", value=5, min=2, max=10, step=1).props(
@@ -147,13 +171,13 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
             with ui.card().classes("w-full tightcard"):
                 ui.label("④ 输出图表与保存").classes("sec")
                 plot_checks: dict[str, Any] = {}
-                with ui.grid(columns=3).classes("w-full gap-x-2 gap-y-0"):
+                with ui.grid(columns=3).classes("w-full gap-x-4 gap-y-1"):
                     for key, label, hint in PLOT_OPTIONS:
                         cb = ui.checkbox(label, value=(key in DEFAULT_PLOTS)).props(
                             "dense").classes("pchk")
                         cb.tooltip(hint)
                         plot_checks[key] = cb
-                with ui.row().classes("w-full gap-2 no-wrap items-center"):
+                with ui.row().classes("w-full gap-3 no-wrap items-center"):
                     sel_scheme = ui.select({k: v for k, v in list_schemes()},
                                            value=DEFAULT_SCHEME, label="配色").props(
                         "dense").classes("flex-1")
@@ -167,7 +191,7 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                     "dense").classes("w-full")
 
             # 数据预览：填满左栏剩余空间（内部滚动），与右栏"结果"区上下对称
-            preview_card = ui.card().classes("w-full tightcard").style(
+            preview_card = ui.card().classes("w-full tightcard data-preview").style(
                 "flex:1;overflow:auto")
             with preview_card:
                 with ui.column().classes("w-full h-full items-center justify-center"):
@@ -175,10 +199,10 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                     ui.label("加载数据后在此预览").classes("cap")
 
         # ============== 右栏：运行与结果（⑤）+ 结果展示 ============== #
-        with ui.column().classes("gap-2 h-full").style(
-                "flex:1 1 0;min-width:0;overflow:hidden"):
+        with ui.column().classes("h-full app-pane").style(
+                "flex:1 1 0;min-width:0"):
             with ui.card().classes("w-full tightcard"):
-                with ui.row().classes("items-center gap-2 no-wrap"):
+                with ui.row().classes("items-center gap-3 no-wrap"):
                     run_btn = ui.button("开始运行", icon="play_arrow").props("dense")
                     open_btn = ui.button("打开输出目录", icon="folder_open",
                                          on_click=lambda: _open_dir(in_outdir.value)).props(
@@ -186,12 +210,13 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                     stage_lbl = ui.label("").classes("cap")
                 progress = ui.linear_progress(value=0, show_value=False).classes("w-full")
                 log_view = ui.log(max_lines=500).classes("w-full").style(
-                    "height:110px;background:#f6f8fa;color:#24292f;"
+                    "height:140px;background:#f6f8fa;color:#24292f;"
                     "border:1px solid #d0d7de;border-radius:4px;"
-                    "font-family:ui-monospace,Consolas,monospace;font-size:.72rem")
+                    "font-family:ui-monospace,Consolas,monospace;font-size:.8rem;line-height:1.45")
 
             # 结果区：高度自适应填满右栏剩余空间，内部滚动（不撑高整页）
-            results_card = ui.card().classes("w-full tightcard").style("flex:1;overflow:auto")
+            results_card = ui.card().classes("w-full tightcard results-panel").style(
+                "flex:1;overflow:auto")
             with results_card:
                 with ui.column().classes("w-full h-full items-center justify-center"):
                     ui.icon("insights").classes("text-5xl text-gray-300")
@@ -234,7 +259,7 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                                 continue
                             for param in current_space:
                                 with ui.row().classes(
-                                        "w-full items-center gap-2 no-wrap border-b pb-1"):
+                                        "w-full items-center gap-3 no-wrap border-b pb-1"):
                                     ui.label(param.name).classes(
                                         "text-sm font-medium").style("width:180px")
                                     if param.kind in {"float", "int"}:
@@ -301,7 +326,7 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                     params_dialog.close()
                     ui.notify("模型参数范围已保存，将用于本次运行", type="positive")
 
-                with ui.row().classes("w-full justify-end gap-2"):
+                with ui.row().classes("w-full justify-end gap-3"):
                     ui.button("取消", on_click=params_dialog.close).props("flat")
                     ui.button("保存", icon="save", on_click=_save_model_params)
 
@@ -416,7 +441,7 @@ def index() -> None:  # noqa: C901 —— 单页应用，集中构建
                     for model_name, items in by_model.items():
                         with ui.expansion(f"{model_name}（{len(items)} 项）",
                                           value=True).classes("w-full"):
-                            with ui.grid(columns=2).classes("w-full gap-2"):
+                            with ui.grid(columns=2).classes("w-full gap-3"):
                                 for it in items:
                                     _render_item(it)
 
