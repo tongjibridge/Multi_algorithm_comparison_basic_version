@@ -1,153 +1,190 @@
-# 可解释机器学习 GUI（ExplainableML）
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%" alt="ExplainableML：从 Excel 表格到可解释回归证据的本地研究工作台">
+</p>
 
-基于 [NiceGUI](https://nicegui.io/) 的本地可解释机器学习程序：**导入 Excel → 选择模型 → 选择参数优化方法 → 勾选输出图表 → 一键训练并生成可解释性分析**。
+<p align="center">
+  面向工程、材料与实验数据研究的本地回归分析软件。<br>
+  用一条可复现工作流完成数据配置、多模型比较、参数优化、指标评估与可解释性出图。
+</p>
 
-源自 `Multi_algorithm_comparison_basic_version/`（多算法预测 FRP 筋-混凝土粘结强度的实践）的重构与通用化，把原本 15 个高度重复的脚本抽象为「统一管道 + 模型注册表 + 可选优化方法 + 可选输出」。
+<p align="center">
+  <code>本地运行</code> · <code>Excel 工作流</code> · <code>多模型比较</code> ·
+  <code>无泄漏 CV</code> · <code>SHAP / PDP / ALE</code> · <code>期刊级出图</code>
+</p>
 
-> 仅回归任务；列含义完全由用户在界面指定。
+<p align="center">
+  <img src="./site/public/images/workbench.png" width="100%" alt="ExplainableML 软件工作台：左侧配置数据、模型与输出，右侧显示日志、指标和结果画廊">
+</p>
 
-## 功能（对应需求）
+> ExplainableML 只在本机处理数据。界面由 NiceGUI 提供运行时，启动后自动打开本地地址 `http://localhost:8080`；它不是需要部署的在线网站。
 
-- **R1 选择模型（可多选）**：XGBoost、LightGBM、CatBoost、随机森林、梯度提升 GBR、决策树、KNN、SVR、MLP，共 9 个，支持横向对比。
-- **R2 导入 Excel**：上传 `.xlsx` 或填本地路径；自定义目标列 / 特征列 / 分类列 / 不标准化列；自动检测分类列并预览数据。
-- **R3 参数优化方法**：Optuna（TPE / 随机 / CMA-ES）、网格搜索、随机搜索、粒子群 PSO（mealpy）、手动默认参数；支持按已选模型查看并修改本次运行的参数搜索范围；统一 K 折交叉验证、无数据泄漏。
-- **R4 输出图表与保存**：勾选回归拟合图、残差图、特征重要性（原生 / 置换 / SHAP）、SHAP 摘要 / 依赖 / 瀑布、PDP·ICE、2D PDP、ALE、预测结果表；**5 组期刊级配色方案**（参考 nature-figure，离散色 + 连续 colormap 统一应用）；自定义保存目录、图片格式（png/svg/pdf）、DPI、Top-K。
+## 为什么使用 ExplainableML
 
-## 环境与安装
+- **把重复脚本变成统一管道**：从 Excel 导入到最终图表，模型共享同一套数据、验证、评估与输出逻辑。
+- **让比较结果更可信**：预处理器位于 sklearn Pipeline 内部，每个交叉验证折独立拟合，避免编码与标准化造成数据泄漏。
+- **让解释结果可以直接交付**：一次运行可生成指标表、预测表及 12 类解释图，并统一控制配色、格式、DPI 与 Top-K。
 
-需要 [uv](https://docs.astral.sh/uv/) 与 Python 3.10（本项目固定 3.10，与 TabPFN 的 GPU 环境对齐）。
+## 从数据到证据
 
-```bash
+<p align="center">
+  <img src="./assets/readme/workflow.svg" width="100%" alt="ExplainableML 五步流程：导入 Excel、定义列角色、比较模型、交叉验证、输出证据">
+</p>
+
+首次成功运行只需要五步：导入 `.xlsx`，指定目标列与特征列，选择模型和优化算法，勾选输出，开始训练。
+
+## 核心能力
+
+| 模块 | 当前能力 |
+| --- | --- |
+| 数据 | 上传 Excel 或填写本地路径；配置目标列、特征列、分类列、不标准化列；预览表格并自动检测分类列 |
+| 模型 | 9 个核心回归器：XGBoost、LightGBM、CatBoost、RF、GBR、DT、KNN、SVR、MLP；可选 TabPFN GPU |
+| 优化 | Optuna：TPE、随机、CMA-ES；mealpy：PSO、GWO、HHO、ARO、INFO；每个模型的搜索空间可在本次运行中修改 |
+| 验证 | K 折交叉验证；RMSE、MAE、R²；固定随机种子；预处理严格封装在验证管道内 |
+| 解释 | 回归拟合、残差、原生/置换/SHAP 重要性、SHAP 摘要/依赖/瀑布、PDP·ICE、2D PDP、ALE |
+| 导出 | 预测结果 `.xlsx`；图片支持 PNG / SVG / PDF、自定义 DPI、Top-K 与 5 组期刊配色 |
+
+> `GridSearchCV`、`RandomizedSearchCV` 与手动默认参数路径仍保留在核心 API 中；当前图形界面聚焦 Optuna 与 mealpy。
+
+## 真实输出
+
+下面的图表由本项目工作流直接生成，不是概念示意图。
+
+<p align="center">
+  <img src="./site/public/images/regression-fit.png" width="100%" alt="XGBoost 测试集回归拟合图，包含真实值、预测值、残差分布与指标">
+</p>
+<p align="center"><sub>回归拟合：真实值、预测值、残差分布与测试指标集中呈现。</sub></p>
+
+<p align="center">
+  <img src="./site/public/images/shap-summary.png" width="100%" alt="XGBoost SHAP 摘要散点图">
+</p>
+<p align="center"><sub>SHAP 摘要：同时观察特征重要程度、影响方向与样本分布。</sub></p>
+
+<details>
+<summary><strong>查看更多真实输出：SHAP 重要性、PDP·ICE 与 ALE</strong></summary>
+
+<br>
+
+<p align="center">
+  <img src="./site/public/images/importance-shap.png" width="100%" alt="XGBoost SHAP 特征重要性图">
+</p>
+
+<p align="center">
+  <img src="./site/public/images/pdp-ice.png" width="100%" alt="PDP 与 ICE 一维解释图">
+</p>
+
+<p align="center">
+  <img src="./site/public/images/ale.png" width="100%" alt="ALE 累积局部效应图">
+</p>
+
+</details>
+
+## 快速开始
+
+### 1. 准备环境
+
+- [uv](https://docs.astral.sh/uv/)
+- Python `>=3.10,<3.13`；项目会在根目录创建并使用 `.venv`
+
+### 2. Windows
+
+最简单的方式是双击根目录的 `start.bat`。首次运行会自动执行依赖同步。
+
+也可以在 PowerShell 中手动启动：
+
+```powershell
 uv sync
+.\.venv\Scripts\python.exe -m app.main
 ```
 
-> ⚠️ 本机注意：若 uv 默认缓存（`C:\Users\…\AppData\Local\uv`，软链到 D 盘）报
-> "too many temporary files" 或 os error 183，请改用项目同盘缓存：
-> `UV_CACHE_DIR=E:/uv-cache uv sync`。
+### 3. 其他平台
 
-### 可选：启用 TabPFN（GPU）
+仓库保留 `start.sh` 启动器，用于 macOS、Linux 与 Git Bash 环境。
 
-TabPFN 需要 torch GPU 版，环境照搬参考机器（torch 1.12.1+cu113）。一键安装：
+浏览器会自动打开 `http://localhost:8080`。如果没有自动打开，手动访问该地址即可。
 
-```bash
-./setup_gpu_env.sh        # 或双击 setup_gpu_env.bat（Windows）
-```
-
-脚本会重建 Python 3.10 环境、装 torch(cu113) 与 tabpfn，并以源码方式安装从参考机复制到 `vendor/` 的 tabpfn-extensions。
-> 注意：tabpfn/extensions 声明 torch≥2.1，与 1.12.1 冲突，脚本用 `--no-deps` 绕过；**装完请勿再单独 `uv sync`**（会删除手动安装的 torch/tabpfn），用 `start` 启动即可。TabPFN 推理较慢，SHAP/PDP 建议不勾选。
-
-## 运行
-
-**最简单**：双击根目录 `start.bat`（Windows），或在 bash 中执行 `./start.sh`。
-脚本会在首次运行时自动 `uv sync` 安装依赖，之后直接用虚拟环境解释器启动（不触碰可能损坏的 uv 默认缓存）。
-
-也可手动启动：
-
-```bash
-uv run python -m app.main
-# 或直接用虚拟环境解释器： .venv/Scripts/python.exe -m app.main
-```
-
-启动后浏览器会自动打开 <http://localhost:8080>，按 ①→⑤ 操作即可。
+> Windows 上若 uv 默认缓存出现 `too many temporary files` 或 `os error 183`，可将缓存放到项目同盘目录：
+>
+> ```powershell
+> $env:UV_CACHE_DIR = 'E:\uv-cache'
+> uv sync
+> ```
 
 ## 使用流程
 
-1. **① 数据导入**：上传 Excel 或填本地路径 → 自动预览、识别分类列 → 按需调整目标/特征/分类/不标准化列、测试集比例、随机种子。
-2. **② 模型选择**：勾选一个或多个模型；需要调整搜索空间时点击“修改模型参数”，按模型编辑数值上下限或分类候选值。
-3. **③ 参数优化**：选方法、预算（trials/迭代）、CV 折数、评分（RMSE/MAE/R²）。
-4. **④ 输出图表与保存**：勾选所需图表，设置保存目录、图片格式、DPI、Top-K。
-5. **⑤ 运行**：实时进度与日志；完成后查看指标对比表、图像画廊（可下载），或「打开输出目录」。
+1. **数据导入**：上传 Excel 或输入本地路径，检查表格预览。
+2. **列配置**：指定目标、特征、分类与不标准化列，并设置测试集比例和随机种子。
+3. **模型与优化**：多选模型，必要时修改搜索空间；选择优化框架、算法、预算、CV 折数和评分。
+4. **输出设置**：勾选图表，设置输出目录、图片格式、DPI、Top-K 与配色。
+5. **运行与检查**：查看实时日志、指标对比表和图像画廊，下载单张结果或打开输出目录。
 
 ## 项目结构
 
-```
+```text
 app/
-├── main.py            # NiceGUI 入口与页面
+├── main.py           # NiceGUI 软件入口与页面编排
 ├── core/
-│   ├── data.py        # Excel 读取、列配置、编码、标准化、划分（Preprocessor 防泄漏）
-│   ├── space.py       # 声明式搜索空间 → 派生 Optuna/Grid/mealpy
-│   ├── models.py      # 9 个模型的注册表（工厂、默认参数、空间、能力）
-│   ├── optimize.py    # 优化方法：Optuna/Grid/Random/PSO/Manual
-│   ├── pipeline.py    # 统一训练管道（划分→优化→训练→评估）
-│   ├── metrics.py     # MSE/RMSE/MAE/R²
-│   ├── plots.py       # 绘图（Agg 后端，中文字体），由 tools.py 重构
-│   └── explain.py     # 按勾选与模型能力分派生成输出（含 SHAP 全套）
-├── ui/state.py        # 后台训练任务与跨线程状态
-└── assets/            # 中文字体 times+simsun.ttf
+│   ├── data.py       # Excel、列配置、预处理与数据划分
+│   ├── models.py     # 模型注册表、默认参数与搜索空间
+│   ├── space.py      # 声明式空间 → Optuna / Grid / mealpy
+│   ├── optimize.py   # 交叉验证与优化器适配
+│   ├── pipeline.py   # 训练、预测与评估主流程
+│   ├── explain.py    # 12 类输出的生成编排
+│   ├── plots.py      # 回归与解释图表
+│   ├── metrics.py    # MSE / RMSE / MAE / R²
+│   └── themes.py     # 期刊级配色方案
+├── ui/state.py       # 后台任务与界面状态
+└── assets/           # 本地字体资源
 
-tests/smoke_core.py    # 核心管道冒烟测试
-todo.md                # 开发计划与进度
+tests/smoke_core.py   # 训练 → 评估 → 出图冒烟测试
+start.bat             # Windows 启动器
+start.sh              # macOS / Linux / Git Bash 启动器
 ```
 
-## 扩展 mealpy 优化器
+项目源自 `Multi_algorithm_comparison_basic_version/` 的工程化重构：将多算法研究中 15 个高度重复的脚本收敛为统一管道、模型注册表、优化器适配层与输出分派层。当前任务范围为**表格回归**，列语义完全由用户在界面中指定。
 
-mealpy 优化器集中在 `app/core/optimize.py` 注册。界面会直接读取其中的
-`METHODS_BY_FAMILY`，因此新增算法通常不需要修改 `app/main.py`，也不需要为每个模型
-重新定义搜索空间；`app/core/space.py` 会把模型已有的声明式搜索空间转换为 mealpy 边界。
+## 开发与验证
 
-下面以新增 WOA（鲸鱼优化算法）为例。
-
-### 1. 注册界面选项
-
-在 `METHODS_BY_FAMILY["mealpy"]` 中增加一项。内部标识必须以 `mealpy_` 开头，
-这样 `optimize()` 才会自动分派到 mealpy 执行路径：
-
-```python
-"mealpy": [
-    # ...已有算法
-    ("mealpy_woa", "WOA 鲸鱼优化"),
-],
-```
-
-### 2. 注册日志显示名称
-
-在 `_MEALPY_ALGORITHM_NAMES` 中加入同一个内部标识：
-
-```python
-_MEALPY_ALGORITHM_NAMES = {
-    # ...已有算法
-    "mealpy_woa": "WOA",
-}
-```
-
-### 3. 创建优化器实例
-
-在 `_build_mealpy_optimizer()` 中增加对应分支：
-
-```python
-if method == "mealpy_woa":
-    from mealpy import WOA
-    return WOA.OriginalWOA(epoch=epoch, pop_size=pop)
-```
-
-保存后，重启程序即可在“mealpy”算法列表中看到 WOA。项目会继续复用统一的 K 折
-交叉验证目标函数、参数解码和最优参数返回逻辑。
-
-不同 mealpy 算法的模块名、类名和必填构造参数可能不同，请以项目当前安装版本的
-mealpy API 为准。如果算法还需要额外参数，就在 `_build_mealpy_optimizer()` 的对应
-分支中一并传入。若内部标识不以 `mealpy_` 开头，还需要额外修改 `optimize()` 的分派条件，
-因此推荐始终遵循 `mealpy_<算法名>` 的命名规则。
-
-完成后可先验证实例是否能创建，再运行核心冒烟测试：
+使用自己的 Excel 数据运行核心冒烟测试：
 
 ```powershell
-uv run python -c "from app.core.optimize import _build_mealpy_optimizer; print(_build_mealpy_optimizer('mealpy_woa', epoch=5, pop=8))"
-uv run python tests/smoke_core.py
+.\.venv\Scripts\python.exe tests\smoke_core.py .\data\your_dataset.xlsx
 ```
 
-最后在界面中选择新算法，以较小的优化预算运行一次，确认日志中显示正确名称且能返回
-最优参数。mealpy 执行异常时，当前实现会记录警告并回退到 Optuna TPE，验证时应同时检查
-运行日志，避免把回退结果误认为新算法已经正常运行。
+测试会跑通随机森林优化、KNN 训练、指标对比和多类图表输出，并检查结果文件是否存在。
 
+实现约束：
+
+- 树模型使用 `TreeExplainer`；KNN、SVR、MLP 等非树模型使用经过背景与样本下采样的 `KernelExplainer`。
+- 绘图使用 Matplotlib `Agg` 后端，适合后台任务与批量保存。
+- 单项解释图生成失败不会中断其他输出；警告会写入运行日志。
+
+<details>
+<summary><strong>可选：启用 TabPFN GPU</strong></summary>
+
+TabPFN 不属于默认环境。Windows 下运行 `setup_gpu_env.bat`；其他平台可使用仓库中的 `setup_gpu_env.sh`。
+
+当前脚本按参考环境安装 `torch 1.12.1+cu113`、TabPFN 与 `tabpfn-extensions`。扩展包声明的 torch 版本与该参考环境存在冲突，因此脚本使用 `--no-deps` 安装；完成后不要再次单独执行 `uv sync`，否则手动安装的 GPU 依赖可能被移除。TabPFN 推理较慢，建议先关闭 SHAP 与 PDP 输出验证基础预测。
+
+</details>
+
+<details>
+<summary><strong>扩展：新增 mealpy 优化器</strong></summary>
+
+mealpy 适配集中在 [`app/core/optimize.py`](./app/core/optimize.py)：
+
+1. 在 `METHODS_BY_FAMILY["mealpy"]` 注册 `mealpy_<name>` 界面选项。
+2. 在 `_MEALPY_ALGORITHM_NAMES` 增加日志显示名。
+3. 在 `_build_mealpy_optimizer()` 返回对应的 mealpy 实例。
+
+模型搜索空间不需要重复定义；[`app/core/space.py`](./app/core/space.py) 会将同一份声明式空间转换为 mealpy 边界。运行时若 mealpy 异常，系统会记录警告并回退到 Optuna TPE，因此扩展后应同时检查日志与最优参数来源。
+
+</details>
 
 ## 引用
 
-本项目基于以下论文中的可解释机器学习研究与 GUI 开发工作。若本项目对你的研究有所帮助，
-请引用：
+如果 ExplainableML 对你的研究有帮助，请引用：
 
-> Wu, J., & Chen, L. (2026). Prediction of bond strength between FRP bars and UHPC
-> using explainable machine learning algorithms. *Journal of Building Engineering*,
-> **119**, 115174. https://doi.org/10.1016/j.jobe.2025.115174
+> Wu, J., & Chen, L. (2026). Prediction of bond strength between FRP bars and UHPC using explainable machine learning algorithms. *Journal of Building Engineering*, **119**, 115174. <https://doi.org/10.1016/j.jobe.2025.115174>
 
 ```bibtex
 @article{Wu2026FRPUHPC,
@@ -161,16 +198,6 @@ uv run python tests/smoke_core.py
 }
 ```
 
-## 测试
+## License
 
-```bash
-uv run python tests/smoke_core.py
-```
-
-会用参考数据集跑通「训练 → 评估 → 出图」并校验输出文件存在。
-
-## 备注
-
-- 绘图使用 `Agg` 后端，图存文件后在界面展示；中文字体来自 `app/assets/times+simsun.ttf`。
-- 非树模型（KNN/SVR/MLP）的 SHAP 用 `KernelExplainer`（较慢，已对背景/样本下采样）；树模型用 `TreeExplainer`。
-- 二期可扩展：TabM / TabPFN / xRFM / Stacking / ELM / 贝叶斯（需 torch 等较重依赖）。
+[MIT](./LICENSE) © 2026 吴纪曙
