@@ -35,6 +35,7 @@ from tools import (
     plot_importance_combined,
     plot_residuals_styled,
     manual_pdp_1d,
+    plot_pdp_ice_1d,
     manual_pdp_2d,
     plot_3d_scatter_three_features,
     plot_3d_pdp_fixed_value,
@@ -296,10 +297,10 @@ os.makedirs(results_plot_save_dir, exist_ok=True)  # 创建目录，如果目录
 
 # --- 【cat 修改】 ---
 train_path = os.path.join(
-    results_plot_save_dir, "cat_训练集精度_final.png"
+    results_plot_save_dir, "cat_训练集精度_final.svg"
 )  # 训练集拟合图的保存路径
 test_path = os.path.join(
-    results_plot_save_dir, "cat_验证集精度_final.png"
+    results_plot_save_dir, "cat_验证集精度_final.svg"
 )  # 验证集拟合图的保存路径
 # 调用函数绘制训练集的拟合图
 plot_regression_fit2(
@@ -336,7 +337,7 @@ gbdt_importance_df = pd.DataFrame(
     {"Feature": feature_names_from_df, "Importance": importances}
 )
 save_path_gbdt = os.path.join(
-    results_plot_save_dir, "cat_特征重要性组合图_final.png"
+    results_plot_save_dir, "cat_特征重要性组合图_final.svg"
 )  # 定义保存路径
 # 调用函数绘制组合特征重要性图
 plot_importance_combined(
@@ -375,7 +376,7 @@ perm_importance_df = pd.DataFrame(
 )
 # --- 【cat 修改】 ---
 save_path_perm = os.path.join(
-    results_plot_save_dir, "cat_特征重要性_Permutation_final.png"
+    results_plot_save_dir, "cat_特征重要性_Permutation_final.svg"
 )  # 定义保存路径
 # 调用函数绘制组合特征重要性图（使用置换重要性数据）
 plot_importance_combined(
@@ -392,10 +393,10 @@ train_residuals = y_train - y_train_pred  # 计算训练集的残差
 test_residuals = y_test - y_test_pred  # 计算测试集的残差
 # --- 【cat 修改】 ---
 train_res_path = os.path.join(
-    results_plot_save_dir, "cat_训练集残差分析图_final.png"
+    results_plot_save_dir, "cat_训练集残差分析图_final.svg"
 )  # 训练集残差图保存路径
 test_res_path = os.path.join(
-    results_plot_save_dir, "cat_验证集残差分析图_final.png"
+    results_plot_save_dir, "cat_验证集残差分析图_final.svg"
 )  # 测试集残差图保存路径
 # 调用函数绘制训练集残差图
 plot_residuals_styled(
@@ -442,48 +443,14 @@ for feature_name in top_features_pdp_names:
             best_model, X_train_scaled_df, feature_name
         )
 
-        # 在每个网格点上计算所有ICE线的标准差，用于构建置信区间
-        pdp_std = np.std(ice_lines_vals, axis=0)
-
-        # 开始绘图
-        fig, ax = plt.subplots(figsize=(10, 8))
-
-        # 绘制所有样本的ICE线 (半透明蓝色细线)
-        for ice_line in ice_lines_vals:
-            ax.plot(grid_vals, ice_line, color="tab:blue", alpha=0.05, linewidth=0.5)
-
-        # 绘制PDP线 (红色虚线)，代表平均效应
-        ax.plot(
+        plot_pdp_ice_1d(
             grid_vals,
             pdp_vals,
-            color="red",
-            linestyle="--",
-            linewidth=3,
-            label="平均效应 (PDP)",
+            ice_lines_vals,
+            feature_name,
+            os.path.join(pdp_ice_save_dir, f"cat_Manual_PDP_ICE_{feature_name}.svg"),
+            rug_values=X_train_scaled_df[feature_name],
         )
-
-        # 绘制95%置信区间 (平均值 ± 1.96 * 标准差)
-        ax.fill_between(
-            grid_vals,
-            pdp_vals - 1.96 * pdp_std,
-            pdp_vals + 1.96 * pdp_std,
-            color="skyblue",
-            alpha=0.4,
-            label="95% 置信区间",
-        )
-
-        ax.set_title(f"PDP/ICE 组合图\n特征: {feature_name}", fontsize=16)  # 设置标题
-        ax.set_xlabel(f"{feature_name} (标准化值)", fontsize=12)  # 设置x轴标签
-        ax.set_ylabel("对预测值的依赖性", fontsize=12)  # 设置y轴标签
-        ax.legend()  # 显示图例
-        # 保存图表
-        # --- 【cat 修改】 ---
-        plt.savefig(
-            os.path.join(pdp_ice_save_dir, f"cat_Manual_PDP_ICE_{feature_name}.png"),
-            dpi=300,
-            bbox_inches="tight",
-        )
-        plt.close(fig)  # 关闭图表
         logger.debug(f"成功绘制特征 '{feature_name}' 的PDP/ICE图。")
 
     except Exception as e:
@@ -517,7 +484,7 @@ if len(top_features_pdp_names) >= 2:  # 确保至少有两个特征可以进行�
             # --- 【cat 修改】 ---
             plt.savefig(
                 os.path.join(
-                    pdp_2way_save_dir, f"cat_Manual_PDP_2D_{feat1}_{feat2}.png"
+                    pdp_2way_save_dir, f"cat_Manual_PDP_2D_{feat1}_{feat2}.svg"
                 ),
                 dpi=300,
             )  # 保存
@@ -544,7 +511,7 @@ if len(top_features_pdp_names) >= 2:  # 确保至少有两个特征可以进行�
             ax_3d.view_init(elev=20, azim=45)  # 设置视角
             # --- 【cat 修改】 ---
             plt.savefig(
-                os.path.join(pdp_3d_save_dir, f"cat_Manual_PDP_3D_{feat1}_{feat2}.png"),
+                os.path.join(pdp_3d_save_dir, f"cat_Manual_PDP_3D_{feat1}_{feat2}.svg"),
                 dpi=300,
             )  # 保存
             plt.close(fig_3d)  # 关闭图表
@@ -576,7 +543,7 @@ if len(top_features_pdp_names) >= 3:  # 确保至少有3个特征
             # --- 【cat 修改】 ---
             save_path = os.path.join(
                 pdp_3d_scatter_save_dir,
-                f"cat_3D_Scatter_{features_tuple[0]}_{features_tuple[1]}_{features_tuple[2]}.png",
+                f"cat_3D_Scatter_{features_tuple[0]}_{features_tuple[1]}_{features_tuple[2]}.svg",
             )
             # 调用函数绘制3D散点图
             plot_3d_scatter_three_features(
@@ -612,7 +579,7 @@ if len(top_features_pdp_names) >= 3:  # 确保至少有3个特征
                 # --- 【cat 修改】 ---
                 save_path = os.path.join(
                     pdp_3d_fixed_save_dir,
-                    f"cat_3DPDP_{varying_feats[0]}_{varying_feats[1]}_Fix_{feature_to_fix}.png",
+                    f"cat_3DPDP_{varying_feats[0]}_{varying_feats[1]}_Fix_{feature_to_fix}.svg",
                 )
                 # 将固定的值设为该特征的中位数
                 fixed_val = X_train_scaled_df[feature_to_fix].median()
@@ -649,7 +616,7 @@ shap_importance_df = pd.DataFrame(
     {"Feature": X_test_scaled_df.columns, "Importance": shap_importance_vals}
 )
 save_path_shap = os.path.join(
-    shap_save_dir, "cat_SHAP_特征重要性组合图_final.png"
+    shap_save_dir, "cat_SHAP_特征重要性组合图_final.svg"
 )  # 定义保存路径
 # 调用组合重要性绘图函数，绘制SHAP重要性条形图
 plot_importance_combined(
@@ -666,7 +633,7 @@ shap.summary_plot(
 plt.title("SHAP 特征影响概览 (散点分布)", fontsize=16)  # 添加标题
 plt.tight_layout()  # 调整布局
 plt.savefig(
-    os.path.join(shap_save_dir, "cat_SHAP_summary_scatter.png"),
+    os.path.join(shap_save_dir, "cat_SHAP_summary_scatter.svg"),
     dpi=300,
     bbox_inches="tight",
 )  # 保存
@@ -691,7 +658,7 @@ for feature_name in top_features_pdp_names:
     plt.tight_layout()  # 调整布局
     plt.savefig(
         os.path.join(
-            shap_dependence_save_dir, f"cat_SHAP_dependence_{feature_name}.png"
+            shap_dependence_save_dir, f"cat_SHAP_dependence_{feature_name}.svg"
         ),
         dpi=300,
         bbox_inches="tight",
@@ -705,7 +672,7 @@ shap.plots.waterfall(shap_values[0], max_display=15, show=False)
 plt.title("SHAP Waterfall Plot (测试集样本 0)", fontsize=16)  # 添加标题
 plt.tight_layout()  # 调整布局
 plt.savefig(
-    os.path.join(shap_save_dir, "cat_SHAP_waterfall_sample_0.png"),
+    os.path.join(shap_save_dir, "cat_SHAP_waterfall_sample_0.svg"),
     dpi=300,
     bbox_inches="tight",
 )  # 保存
@@ -830,7 +797,7 @@ for i, feature_name in enumerate(top_features_ale_names):
         ax.set_ylabel("ALE (对预测值的影响)", fontsize=12)  # 设置y轴标签
         plt.tight_layout()  # 调整布局
         plt.savefig(
-            os.path.join(ale_save_dir, f"cat_ALE_1D_{feature_name}.png"),
+            os.path.join(ale_save_dir, f"cat_ALE_1D_{feature_name}.svg"),
             dpi=300,
             bbox_inches="tight",
         )  # 保存
@@ -872,7 +839,7 @@ if len(top_features_ale_names) >= 2:  # 确保至少有两个特征
             plt.tight_layout()  # 调整布局
             plt.savefig(
                 os.path.join(
-                    ale_save_dir, f"cat_ALE_2D_{feat1_name}_vs_{feat2_name}.png"
+                    ale_save_dir, f"cat_ALE_2D_{feat1_name}_vs_{feat2_name}.svg"
                 ),
                 dpi=300,
                 bbox_inches="tight",

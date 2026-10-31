@@ -6,7 +6,7 @@ import joblib
 # 设置savemodel文件夹路径
 SAVEMODEL_DIR = "f:/py/Multi_algorithm_comparison_basic_version/savemodel"
 # 设置输出文件路径
-OUTPUT_FILE = "model_best_params.txt"
+OUTPUT_FILE = "model_best_params2.txt"
 
 # 存储所有模型的参数
 model_params = []
@@ -15,7 +15,7 @@ model_params = []
 # 遍历savemodel文件夹下的所有子文件夹和文件，读取已训练模型的最佳参数
 def extract_best_params():
     # 使用glob模式匹配所有_model_final.pkl文件
-    pattern = os.path.join(SAVEMODEL_DIR, "**", "*_model_final.pkl")
+    pattern = os.path.join(SAVEMODEL_DIR, "*2", "*_model_final.pkl")
     model_files = glob.glob(pattern, recursive=True)
 
     if not model_files:

@@ -1,0 +1,11 @@
+BayesianRidge: {'alpha_1': 3.6073877396204297e-06, 'alpha_2': 0.0006237833187343167, 'lambda_1': 9.967406005213311e-05, 'lambda_2': 1.7038243855110367e-08, 'max_iter': 301}
+cat: {'learning_rate': 0.040860906177475495, 'l2_leaf_reg': 5, 'iterations': 428, 'depth': 5}
+DecisionTree: {'max_depth': 23, 'min_samples_split': 5, 'min_samples_leaf': 4}
+ELM: {'number': 62, 'func': 'sigm'}
+GBR: {'n_estimators': 125, 'max_depth': 3, 'learning_rate': 0.11038497297794932, 'subsample': 0.6160428558117717}
+kNN: {'weights': 'uniform', 'n_neighbors': 3, 'p': 2}
+LightGBM: {'learning_rate': 0.1902077772255478, 'n_estimators': 276, 'num_leaves': 149, 'max_depth': 6}
+MLP: {'hidden_layer_sizes': (128, 128), 'max_iter': 533, 'alpha': 0.002731597634728478}
+RF: {'n_estimators': 92, 'max_depth': 15, 'min_samples_split': 7, 'min_samples_leaf': 1, 'max_features': None, 'bootstrap': True}
+SVR: {'C': 9.350441832568755, 'kernel': 'rbf', 'gamma': 0.09543846064792715}
+xgb: {'learning_rate': 0.1753856898554782, 'n_estimators': 206, 'subsample': 0.38668203544783586, 'max_depth': 3}

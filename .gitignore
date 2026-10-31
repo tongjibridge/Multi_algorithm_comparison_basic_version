@@ -137,9 +137,24 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# Custom folders to ignore
+# ---- 数据：训练/预测用的数据文件一律不入库 ----
+*.xlsx
+*.xls
+*.csv
+
+# ---- 结果与训练产物：输出图、指标表、模型权重 ----
 result/
+result-old/
 savemodel/
 back/
 data/
 catboost_info/
+
+# ---- 与模型无关的杂项：根目录散落图片、网页等 ----
+/*.png
+/*.tif
+/*.svg
+/index.html
+
+# ---- 中文版 UI（暂不入库）----
+ui2cn.py

@@ -231,10 +231,10 @@ logger.info(
 
 # --- 【RF 修改】 ---
 train_path = os.path.join(
-    results_plot_save_dir, "RF_训练集精度_final.png"
+    results_plot_save_dir, "RF_训练集精度_final.svg"
 )  # 训练集拟合图的保存路径
 test_path = os.path.join(
-    results_plot_save_dir, "RF_验证集精度_final.png"
+    results_plot_save_dir, "RF_验证集精度_final.svg"
 )  # 验证集拟合图的保存路径
 # 调用函数绘制训练集的拟合图
 plot_regression_fit2(
@@ -271,7 +271,7 @@ gbdt_importance_df = pd.DataFrame(
     {"Feature": feature_names_from_df, "Importance": importances}
 )
 save_path_gbdt = os.path.join(
-    results_plot_save_dir, "RF_特征重要性组合图_final.png"
+    results_plot_save_dir, "RF_特征重要性组合图_final.svg"
 )  # 定义保存路径
 # 调用函数绘制组合特征重要性图
 plot_importance_combined(
@@ -310,7 +310,7 @@ perm_importance_df = pd.DataFrame(
 )
 # --- 【RF 修改】 ---
 save_path_perm = os.path.join(
-    results_plot_save_dir, "RF_特征重要性_Permutation_final.png"
+    results_plot_save_dir, "RF_特征重要性_Permutation_final.svg"
 )  # 定义保存路径
 # 调用函数绘制组合特征重要性图（使用置换重要性数据）
 plot_importance_combined(
@@ -327,10 +327,10 @@ train_residuals = y_train - y_train_pred  # 计算训练集的残差
 test_residuals = y_test - y_test_pred  # 计算测试集的残差
 # --- 【RF 修改】 ---
 train_res_path = os.path.join(
-    results_plot_save_dir, "RF_训练集残差分析图_final.png"
+    results_plot_save_dir, "RF_训练集残差分析图_final.svg"
 )  # 训练集残差图保存路径
 test_res_path = os.path.join(
-    results_plot_save_dir, "RF_验证集残差分析图_final.png"
+    results_plot_save_dir, "RF_验证集残差分析图_final.svg"
 )  # 测试集残差图保存路径
 # 调用函数绘制训练集残差图
 plot_residuals_styled(
@@ -414,7 +414,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 #         # 保存图表
 #         # --- 【RF 修改】 ---
 #         plt.savefig(
-#             os.path.join(pdp_ice_save_dir, f"RF_Manual_PDP_ICE_{feature_name}.png"),
+#             os.path.join(pdp_ice_save_dir, f"RF_Manual_PDP_ICE_{feature_name}.svg"),
 #             dpi=300,
 #             bbox_inches="tight",
 #         )
@@ -452,7 +452,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 #             # --- 【RF 修改】 ---
 #             plt.savefig(
 #                 os.path.join(
-#                     pdp_2way_save_dir, f"RF_Manual_PDP_2D_{feat1}_{feat2}.png"
+#                     pdp_2way_save_dir, f"RF_Manual_PDP_2D_{feat1}_{feat2}.svg"
 #                 ),
 #                 dpi=300,
 #             )  # 保存
@@ -479,7 +479,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 #             ax_3d.view_init(elev=20, azim=45)  # 设置视角
 #             # --- 【RF 修改】 ---
 #             plt.savefig(
-#                 os.path.join(pdp_3d_save_dir, f"RF_Manual_PDP_3D_{feat1}_{feat2}.png"),
+#                 os.path.join(pdp_3d_save_dir, f"RF_Manual_PDP_3D_{feat1}_{feat2}.svg"),
 #                 dpi=300,
 #             )  # 保存
 #             plt.close(fig_3d)  # 关闭图表
@@ -511,7 +511,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 #             # --- 【RF 修改】 ---
 #             save_path = os.path.join(
 #                 pdp_3d_scatter_save_dir,
-#                 f"RF_3D_Scatter_{features_tuple[0]}_{features_tuple[1]}_{features_tuple[2]}.png",
+#                 f"RF_3D_Scatter_{features_tuple[0]}_{features_tuple[1]}_{features_tuple[2]}.svg",
 #             )
 #             # 调用函数绘制3D散点图
 #             plot_3d_scatter_three_features(
@@ -547,7 +547,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 #                 # --- 【RF 修改】 ---
 #                 save_path = os.path.join(
 #                     pdp_3d_fixed_save_dir,
-#                     f"RF_3DPDP_{varying_feats[0]}_{varying_feats[1]}_Fix_{feature_to_fix}.png",
+#                     f"RF_3DPDP_{varying_feats[0]}_{varying_feats[1]}_Fix_{feature_to_fix}.svg",
 #                 )
 #                 # 将固定的值设为该特征的中位数
 #                 fixed_val = X_train_scaled_df[feature_to_fix].median()
@@ -584,7 +584,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 #     {"Feature": X_test_scaled_df.columns, "Importance": shap_importance_vals}
 # )
 # save_path_shap = os.path.join(
-#     shap_save_dir, "RF_SHAP_特征重要性组合图_final.png"
+#     shap_save_dir, "RF_SHAP_特征重要性组合图_final.svg"
 # )  # 定义保存路径
 # # 调用组合重要性绘图函数，绘制SHAP重要性条形图
 # plot_importance_combined(
@@ -601,7 +601,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 # plt.title("SHAP 特征影响概览 (散点分布)", fontsize=16)  # 添加标题
 # plt.tight_layout()  # 调整布局
 # plt.savefig(
-#     os.path.join(shap_save_dir, "RF_SHAP_summary_scatter.png"),
+#     os.path.join(shap_save_dir, "RF_SHAP_summary_scatter.svg"),
 #     dpi=300,
 #     bbox_inches="tight",
 # )  # 保存
@@ -626,7 +626,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 #     plt.tight_layout()  # 调整布局
 #     plt.savefig(
 #         os.path.join(
-#             shap_dependence_save_dir, f"RF_SHAP_dependence_{feature_name}.png"
+#             shap_dependence_save_dir, f"RF_SHAP_dependence_{feature_name}.svg"
 #         ),
 #         dpi=300,
 #         bbox_inches="tight",
@@ -640,7 +640,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 # plt.title("SHAP Waterfall Plot (测试集样本 0)", fontsize=16)  # 添加标题
 # plt.tight_layout()  # 调整布局
 # plt.savefig(
-#     os.path.join(shap_save_dir, "RF_SHAP_waterfall_sample_0.png"),
+#     os.path.join(shap_save_dir, "RF_SHAP_waterfall_sample_0.svg"),
 #     dpi=300,
 #     bbox_inches="tight",
 # )  # 保存
@@ -692,7 +692,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 #         ax.set_ylabel("ALE (对预测值的影响)", fontsize=12)  # 设置y轴标签
 #         plt.tight_layout()  # 调整布局
 #         plt.savefig(
-#             os.path.join(ale_save_dir, f"RF_ALE_1D_{feature_name}.png"),
+#             os.path.join(ale_save_dir, f"RF_ALE_1D_{feature_name}.svg"),
 #             dpi=300,
 #             bbox_inches="tight",
 #         )  # 保存
@@ -734,7 +734,7 @@ plot_residuals_styled(test_residuals, y_test_pred, test_res_path, "RF 验证集�
 #             plt.tight_layout()  # 调整布局
 #             plt.savefig(
 #                 os.path.join(
-#                     ale_save_dir, f"RF_ALE_2D_{feat1_name}_vs_{feat2_name}.png"
+#                     ale_save_dir, f"RF_ALE_2D_{feat1_name}_vs_{feat2_name}.svg"
 #                 ),
 #                 dpi=300,
 #                 bbox_inches="tight",

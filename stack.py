@@ -37,6 +37,7 @@ from tools import (
     plot_importance_combined,
     plot_residuals_styled,
     manual_pdp_1d,
+    plot_pdp_ice_1d,
     manual_pdp_2d,
     plot_3d_scatter_three_features,
     plot_3d_pdp_fixed_value,
@@ -387,48 +388,14 @@ for feature_name in top_features_pdp_names:
             best_model, X_train_scaled_df, feature_name
         )
 
-        # 在每个网格点上计算所有ICE线的标准差，用于构建置信区间
-        pdp_std = np.std(ice_lines_vals, axis=0)
-
-        # 开始绘图
-        fig, ax = plt.subplots(figsize=(10, 8))
-
-        # 绘制所有样本的ICE线 (半透明蓝色细线)
-        for ice_line in ice_lines_vals:
-            ax.plot(grid_vals, ice_line, color="tab:blue", alpha=0.05, linewidth=0.5)
-
-        # 绘制PDP线 (红色虚线)，代表平均效应
-        ax.plot(
+        plot_pdp_ice_1d(
             grid_vals,
             pdp_vals,
-            color="red",
-            linestyle="--",
-            linewidth=3,
-            label="平均效应 (PDP)",
-        )
-
-        # 绘制95%置信区间 (平均值 ± 1.96 * 标准差)
-        ax.fill_between(
-            grid_vals,
-            pdp_vals - 1.96 * pdp_std,
-            pdp_vals + 1.96 * pdp_std,
-            color="skyblue",
-            alpha=0.4,
-            label="95% 置信区间",
-        )
-
-        ax.set_title(f"PDP/ICE 组合图\n特征: {feature_name}", fontsize=16)  # 设置标题
-        ax.set_xlabel(f"{feature_name} (标准化值)", fontsize=12)  # 设置x轴标签
-        ax.set_ylabel("对预测值的依赖性", fontsize=12)  # 设置y轴标签
-        ax.legend()  # 显示图例
-        # 保存图表
-        # --- 【stack 修改】 ---
-        plt.savefig(
+            ice_lines_vals,
+            feature_name,
             os.path.join(pdp_ice_save_dir, f"stack_Manual_PDP_ICE_{feature_name}.png"),
-            dpi=300,
-            bbox_inches="tight",
+            rug_values=X_train_scaled_df[feature_name],
         )
-        plt.close(fig)  # 关闭图表
         logger.debug(f"成功绘制特征 '{feature_name}' 的PDP/ICE图。")
 
     except Exception as e:

@@ -361,6 +361,323 @@ def manual_pdp_1d(model, X_data, feature_name, grid_resolution=50):
     return grid_values, pdp_values, ice_lines
 
 
+
+PDP_ICE_COLOR_SCHEMES = {
+    "default": {
+        "ice_color": "tab:blue",
+        "ice_alpha": 0.05,
+        "ice_linewidth": 0.5,
+        "pdp_color": "red",
+        "pdp_linestyle": "--",
+        "pdp_linewidth": 3,
+        "ci_color": "skyblue",
+        "ci_alpha": 0.4,
+    },
+    "nature_blue": {
+        "ice_color": "#3775BA",
+        "ice_alpha": 0.08,
+        "ice_linewidth": 0.5,
+        "pdp_color": "#0F4D92",
+        "pdp_linestyle": "-",
+        "pdp_linewidth": 3,
+        "ci_color": "#B4C0E4",
+        "ci_alpha": 0.35,
+    },
+    "nmi_pastel": {
+        "ice_color": "#7884B4",
+        "ice_alpha": 0.08,
+        "ice_linewidth": 0.5,
+        "pdp_color": "#484878",
+        "pdp_linestyle": "-",
+        "pdp_linewidth": 3,
+        "ci_color": "#E4E4F0",
+        "ci_alpha": 0.55,
+    },
+    "teal_gold": {
+        "ice_color": "#77D7D1",
+        "ice_alpha": 0.08,
+        "ice_linewidth": 0.5,
+        "pdp_color": "#42949E",
+        "pdp_linestyle": "-",
+        "pdp_linewidth": 3,
+        "ci_color": "#F0E0D0",
+        "ci_alpha": 0.45,
+    },
+    "clinical": {
+        "ice_color": "#8F8F8F",
+        "ice_alpha": 0.08,
+        "ice_linewidth": 0.5,
+        "pdp_color": "#D24B40",
+        "pdp_linestyle": "-",
+        "pdp_linewidth": 3,
+        "ci_color": "#F2E6D9",
+        "ci_alpha": 0.55,
+    },
+}
+PDP_ICE_COLOR_SCHEMES["current"] = PDP_ICE_COLOR_SCHEMES["default"]
+PDP_ICE_COLOR_SCHEMES["legacy"] = PDP_ICE_COLOR_SCHEMES["default"]
+
+
+PDP_ICE_STYLE_PRESETS = {
+    "nature": {
+        "figsize": (6.0, 4.2),
+        "font_size": 8,
+        "title_size": 9,
+        "label_size": 8,
+        "tick_size": 7,
+        "legend_size": 7,
+        "axes_linewidth": 0.8,
+        "tick_width": 0.8,
+        "tick_length": 3,
+        "pdp_linewidth": 1.9,
+        "ice_linewidth": 0.35,
+        "ice_alpha": 0.04,
+        "ci_alpha": 0.28,
+        "rug_alpha": 0.20,
+        "rug_markersize": 5,
+        "legend_loc": "best",
+        "dpi": 600,
+    },
+    "compact": {
+        "figsize": (3.6, 2.7),
+        "font_size": 7,
+        "title_size": 8,
+        "label_size": 7,
+        "tick_size": 6.5,
+        "legend_size": 6.5,
+        "axes_linewidth": 0.7,
+        "tick_width": 0.7,
+        "tick_length": 2.5,
+        "pdp_linewidth": 1.5,
+        "ice_linewidth": 0.3,
+        "ice_alpha": 0.035,
+        "ci_alpha": 0.24,
+        "rug_alpha": 0.18,
+        "rug_markersize": 4,
+        "legend_loc": "best",
+        "dpi": 600,
+    },
+    "legacy": {
+        "figsize": (10, 8),
+        "font_size": 12,
+        "title_size": 16,
+        "label_size": 12,
+        "tick_size": 10,
+        "legend_size": 10,
+        "axes_linewidth": 1.0,
+        "tick_width": 1.0,
+        "tick_length": 4,
+        "pdp_linewidth": None,
+        "ice_linewidth": None,
+        "ice_alpha": None,
+        "ci_alpha": None,
+        "rug_alpha": 0.0,
+        "rug_markersize": 0,
+        "legend_loc": "best",
+        "dpi": 300,
+    },
+}
+
+
+def get_pdp_ice_color_scheme(color_scheme=None):
+    """
+    获取单变量PDP/ICE组合图的配色方案。
+
+    color_scheme可以是方案名，或包含部分颜色角色的dict。None时使用当前默认配色。
+    """
+    if color_scheme is None:
+        return dict(PDP_ICE_COLOR_SCHEMES["default"])
+    if isinstance(color_scheme, dict):
+        scheme = dict(PDP_ICE_COLOR_SCHEMES["default"])
+        scheme.update(color_scheme)
+        return scheme
+    if color_scheme not in PDP_ICE_COLOR_SCHEMES:
+        available = ", ".join(PDP_ICE_COLOR_SCHEMES.keys())
+        raise ValueError(f"未知PDP/ICE配色方案: {color_scheme}. 可选方案: {available}")
+    return dict(PDP_ICE_COLOR_SCHEMES[color_scheme])
+
+
+def get_pdp_ice_style(style="nature"):
+    """获取PDP/ICE图的版式样式；style也可以传入dict覆盖局部设置。"""
+    if style is None:
+        style = "nature"
+    if isinstance(style, dict):
+        preset = dict(PDP_ICE_STYLE_PRESETS["nature"])
+        preset.update(style)
+        return preset
+    if style not in PDP_ICE_STYLE_PRESETS:
+        available = ", ".join(PDP_ICE_STYLE_PRESETS.keys())
+        raise ValueError(f"未知PDP/ICE样式: {style}. 可选样式: {available}")
+    return dict(PDP_ICE_STYLE_PRESETS[style])
+
+
+def plot_pdp_ice_1d(
+    grid_vals,
+    pdp_vals,
+    ice_lines_vals,
+    feature_name,
+    save_path=None,
+    color_scheme=None,
+    style="nature",
+    rug_values=None,
+    show_rug=True,
+    ci_multiplier=1.96,
+    figsize=None,
+    title=None,
+    xlabel=None,
+    ylabel=None,
+    pdp_label="平均效应 (PDP)",
+    ci_label="95% 置信区间",
+):
+    """
+    绘制单变量PDP (含置信区间) 和 ICE 组合图。
+
+    默认配色保持原有输出；默认版式采用Nature风格的轻量化视觉层级。
+    color_scheme可选: default/current/legacy, nature_blue, nmi_pastel, teal_gold, clinical。
+    style可选: nature, compact, legacy；也可传dict覆盖字号、线宽、画布尺寸等设置。
+    """
+    colors = get_pdp_ice_color_scheme(color_scheme)
+    style_cfg = get_pdp_ice_style(style)
+    if figsize is not None:
+        style_cfg["figsize"] = figsize
+
+    ice_lines_vals = np.asarray(ice_lines_vals)
+    pdp_std = np.std(ice_lines_vals, axis=0)
+    ci_low = pdp_vals - ci_multiplier * pdp_std
+    ci_high = pdp_vals + ci_multiplier * pdp_std
+
+    ice_alpha = colors["ice_alpha"] if style_cfg["ice_alpha"] is None else style_cfg["ice_alpha"]
+    ice_linewidth = (
+        colors["ice_linewidth"]
+        if style_cfg["ice_linewidth"] is None
+        else style_cfg["ice_linewidth"]
+    )
+    pdp_linewidth = (
+        colors["pdp_linewidth"]
+        if style_cfg["pdp_linewidth"] is None
+        else style_cfg["pdp_linewidth"]
+    )
+    ci_alpha = colors["ci_alpha"] if style_cfg["ci_alpha"] is None else style_cfg["ci_alpha"]
+
+    font_family = ["Arial", "Helvetica", "DejaVu Sans", "sans-serif"]
+    if "prop" in globals():
+        font_family.insert(0, prop.get_name())
+    rc_params = {
+        "font.family": "sans-serif",
+        "font.sans-serif": font_family,
+        "svg.fonttype": "none",
+        "pdf.fonttype": 42,
+        "font.size": style_cfg["font_size"],
+        "axes.spines.right": False,
+        "axes.spines.top": False,
+        "axes.linewidth": style_cfg["axes_linewidth"],
+        "legend.frameon": False,
+    }
+
+    with plt.rc_context(rc_params):
+        fig, ax = plt.subplots(figsize=style_cfg["figsize"])
+        fig.patch.set_facecolor("white")
+        ax.set_facecolor("white")
+
+        ax.fill_between(
+            grid_vals,
+            ci_low,
+            ci_high,
+            color=colors["ci_color"],
+            alpha=ci_alpha,
+            linewidth=0,
+            label=ci_label,
+            zorder=1,
+        )
+
+        for ice_line in ice_lines_vals:
+            ax.plot(
+                grid_vals,
+                ice_line,
+                color=colors["ice_color"],
+                alpha=ice_alpha,
+                linewidth=ice_linewidth,
+                solid_capstyle="round",
+                zorder=2,
+            )
+
+        ax.plot(
+            grid_vals,
+            pdp_vals,
+            color=colors["pdp_color"],
+            linestyle=colors["pdp_linestyle"],
+            linewidth=pdp_linewidth,
+            solid_capstyle="round",
+            label=pdp_label,
+            zorder=4,
+        )
+
+        finite_y = np.concatenate([
+            np.ravel(ice_lines_vals[np.isfinite(ice_lines_vals)]),
+            np.ravel(ci_low[np.isfinite(ci_low)]),
+            np.ravel(ci_high[np.isfinite(ci_high)]),
+        ])
+        if finite_y.size > 0:
+            y_min, y_max = finite_y.min(), finite_y.max()
+            y_pad = (y_max - y_min) * 0.06 if y_max > y_min else 1.0
+            ax.set_ylim(y_min - y_pad, y_max + y_pad)
+
+        if show_rug and rug_values is not None and style_cfg["rug_alpha"] > 0:
+            rug_values = np.asarray(rug_values, dtype=float)
+            rug_values = rug_values[np.isfinite(rug_values)]
+            if rug_values.size > 0:
+                ax.plot(
+                    rug_values,
+                    np.full_like(rug_values, 0.018),
+                    linestyle="None",
+                    marker="|",
+                    markersize=style_cfg["rug_markersize"],
+                    markeredgewidth=style_cfg["axes_linewidth"],
+                    color="#4D4D4D",
+                    alpha=style_cfg["rug_alpha"],
+                    transform=ax.get_xaxis_transform(),
+                    clip_on=False,
+                    zorder=3,
+                )
+
+        if title is None:
+            title = f"PDP/ICE 组合图\n特征: {feature_name}"
+        if xlabel is None:
+            xlabel = f"{feature_name} (标准化值)"
+        if ylabel is None:
+            ylabel = "对预测值的依赖性"
+        ax.set_title(title, fontsize=style_cfg["title_size"], pad=6, weight="bold")
+        ax.set_xlabel(xlabel, fontsize=style_cfg["label_size"], labelpad=4)
+        ax.set_ylabel(ylabel, fontsize=style_cfg["label_size"], labelpad=4)
+        ax.tick_params(
+            axis="both",
+            which="major",
+            direction="out",
+            length=style_cfg["tick_length"],
+            width=style_cfg["tick_width"],
+            labelsize=style_cfg["tick_size"],
+            colors="#272727",
+        )
+        ax.minorticks_off()
+        ax.grid(False)
+        ax.margins(x=0.02)
+        for spine in ["left", "bottom"]:
+            ax.spines[spine].set_color("#272727")
+            ax.spines[spine].set_linewidth(style_cfg["axes_linewidth"])
+        ax.legend(
+            loc=style_cfg["legend_loc"],
+            fontsize=style_cfg["legend_size"],
+            handlelength=1.8,
+            borderaxespad=0.3,
+        )
+        fig.tight_layout(pad=0.8)
+
+        if save_path is not None:
+            plt.savefig(save_path, dpi=style_cfg["dpi"], bbox_inches="tight")
+            plt.close(fig)
+    return fig, ax
+
+
 def manual_pdp_2d(model, X_data, features_tuple, grid_resolution=20):
     """
     手动计算二维部分依赖(PDP)数据。
@@ -1007,6 +1324,14 @@ def create_and_save_top_interaction_dependence_plots(
 def plot_regression_fit2(
     y_train, y_train_pred, r2, rmse, mae, data_label_en, title_en, save_path
 ):
+    font_path = "times+simsun.ttf"
+    font_manager.fontManager.addfont(font_path)
+    prop = font_manager.FontProperties(fname=font_path)
+    font_options = {
+        "family": "sans-serif",  # 设置字体家族
+        "sans-serif": prop.get_name(),  # 设置字体
+    }
+    plt.rc("font", **font_options)
     color_schemes = {
         "2_Nature": {
             "train": "#C15060",
@@ -1025,14 +1350,165 @@ def plot_regression_fit2(
     c_grid = color_schemes["2_Nature"]["grid"]
     c_bg_fill = color_schemes["2_Nature"]["bg_fill"]
     min_val = 0
-    max_val = max(y_train.max(), y_train_pred.max()) + 5
+    max_val = max(y_train.max(), y_train_pred.max())
+    max_val += (max_val - min_val) / 6
     fig = plt.figure(figsize=(12, 8), dpi=600)
     gs = gridspec.GridSpec(
         2,
         3,
         width_ratios=[0.6, 3, 0.5],
         height_ratios=[0.5, 3],
-        wspace=0.25,
+        wspace=0.4,
+        hspace=0.1,
+    )
+    ax_main = fig.add_subplot(gs[1, 1])
+    ax_top = fig.add_subplot(gs[0, 1], sharex=ax_main)
+    ax_right = fig.add_subplot(gs[1, 2], sharey=ax_main)
+    ax_left = fig.add_subplot(gs[1, 0], sharey=ax_main)
+    ax_top_left = fig.add_subplot(gs[0, 0], sharex=ax_left)
+    ax_main.scatter(
+        y_train,
+        y_train_pred,
+        c=c_train,
+        s=60,
+        alpha=0.9,
+        edgecolors="grey",
+        linewidth=0.5,
+        label="Training set",
+    )
+
+    ax_main.plot(
+        [min_val, max_val], [min_val, max_val], c=c_line, linestyle="--", linewidth=1.5
+    )
+    x_line = np.linspace(min_val, max_val, 100)
+    ax_main.fill_between(
+        x_line, x_line * 0.8, x_line * 1.2, color=c_band, alpha=0.25, label="±20%"
+    )
+    metrics_text = f"$R^2 = {r2:.3f}$\n$RMSE = {rmse:.3f}$\n$MAE = {mae:.3f}$"
+    # 在图的左上角添加文本框，显示评估指标
+    ax_main.text(
+        0.05,
+        0.95,
+        metrics_text,
+        transform=ax_main.transAxes,
+        fontsize=16,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.5),
+    )
+    ax_main.set_xlim([min_val, max_val])  # 设置x轴范围
+    ax_main.set_ylim([min_val, max_val])
+    ax_main.tick_params(
+        axis="both", which="both", direction="in", top=False, right=False, labelsize=14
+    )
+    ax_main.minorticks_off()
+    ax_main.set_xlabel("True Values", fontsize=16)  # 设置x轴标签
+    ax_main.set_ylabel("Predicted Values", fontsize=16)  # 设置y轴标签
+    # 显示图例在右下角
+    ax_main.legend(fontsize=14, loc="lower right")
+
+    bins = 15
+    ax_top.hist(
+        [y_train], bins=bins, stacked=True, color=[c_train], edgecolor="grey", alpha=0.8
+    )
+    ax_top.tick_params(
+        axis="both", which="both", direction="in", top=False, right=False, labelsize=14
+    )
+    ax_top.minorticks_off()
+    ax_top.set_ylabel("Count", fontsize=16)  # 设置y轴标签
+    ax_right.hist(
+        [y_train_pred],
+        bins=bins,
+        stacked=True,
+        orientation="horizontal",
+        color=[c_train],
+        edgecolor="grey",
+        alpha=0.8,
+    )
+    ax_right.tick_params(
+        axis="both", which="both", direction="in", top=False, right=False, labelsize=14
+    )
+    ax_right.minorticks_off()
+    ax_right.set_xlabel("Count", fontsize=16)  # 设置y轴标签
+    resid_train = y_train - y_train_pred
+    ax_left.scatter(
+        resid_train,
+        y_train_pred,
+        c=c_train,
+        s=40,
+        alpha=0.8,
+        edgecolors="grey",
+        linewidth=0.5,
+    )
+    ax_left.tick_params(
+        axis="both", which="both", direction="in", top=False, right=False, labelsize=14
+    )
+    ax_left.minorticks_off()
+    ax_left.axvline(0, color=c_line, linestyle="--", linewidth=1.2)
+    ax_left.axvspan(-3, 3, color=c_band, alpha=0.2)
+    ax_left.set_xlabel("Residuals", fontsize=16)  # 设置y轴标签
+
+    ax_top_left.hist(
+        [resid_train],
+        bins=10,
+        stacked=True,
+        color=[c_train],
+        edgecolor="grey",
+        alpha=0.8,
+    )
+    ax_top_left.tick_params(
+        axis="both", which="both", direction="in", top=False, right=False, labelsize=14
+    )
+    ax_top_left.minorticks_off()
+    ax_top_left.set_ylabel("Count", fontsize=16)  # 设置y轴标签
+    for ax in [ax_main, ax_top, ax_right, ax_left, ax_top_left]:
+        for spine in ax.spines.values():
+            spine.set_visible(True)
+            spine.set_color("black")
+            spine.set_linewidth(1.0)
+
+    plt.savefig(
+        save_path, dpi=600, bbox_inches="tight"
+    )  # , pil_kwargs={"quality": 95})
+    plt.close(fig)
+
+
+def plot_regression_fit3(
+    y_train, y_train_pred, r2, rmse, mae, data_label_en, title_en, save_path
+):
+    font_path = "times+simsun.ttf"
+    font_manager.fontManager.addfont(font_path)
+    prop = font_manager.FontProperties(fname=font_path)
+    font_options = {
+        "family": "sans-serif",  # 设置字体家族
+        "sans-serif": prop.get_name(),  # 设置字体
+    }
+    plt.rc("font", **font_options)
+    color_schemes = {
+        "2_Nature": {
+            "train": "#465590",
+            "test": "#34768C",
+            "line": "#465590",
+            "band": "#465590",
+            "grid": "#B0B0B0",
+            "bg_fill": "#FAFAFA",
+        },
+    }
+    selected_theme_id = 20
+    c_train = color_schemes["2_Nature"]["train"]
+    c_test = color_schemes["2_Nature"]["test"]
+    c_line = color_schemes["2_Nature"]["line"]
+    c_band = color_schemes["2_Nature"]["band"]
+    c_grid = color_schemes["2_Nature"]["grid"]
+    c_bg_fill = color_schemes["2_Nature"]["bg_fill"]
+    min_val = -70
+    max_val = 70
+    fig = plt.figure(figsize=(12, 8), dpi=600)
+    gs = gridspec.GridSpec(
+        2,
+        3,
+        width_ratios=[0.6, 3, 0.5],
+        height_ratios=[0.5, 3],
+        wspace=0.4,
         hspace=0.1,
     )
     ax_main = fig.add_subplot(gs[1, 1])
@@ -1108,6 +1584,8 @@ def plot_regression_fit2(
     ax_left.axvline(0, color=c_line, linestyle="--", linewidth=1.2)
     ax_left.axvspan(-3, 3, color=c_band, alpha=0.2)
     ax_left.set_xlabel("Residuals", fontsize=16)  # 设置y轴标签
+    ax_left.set_xlim(-0.1, 0.1)
+
     ax_top_left.hist(
         [resid_train],
         bins=10,

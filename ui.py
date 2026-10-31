@@ -114,9 +114,10 @@ def calculate_features(
     return result.flatten()[0]
 
 
+my_theme = gr.Theme.from_hub("JohnSmith9982/small_and_pretty")
 # 创建Gradio界面
 with gr.Blocks(
-    theme=gr.themes.Soft(),
+    theme=my_theme,
     title="bond strenth Predictor of FRP-UHPC by machine learning",
 ) as demo:
     gr.Markdown(
