@@ -12,13 +12,13 @@
 
 - **任务**：以 FRP 纤维类型/表面类型、暴露时间、温度、弹性模量、混凝土强度、粘结长度、直径、保护层厚度等 9 个特征，预测海洋环境下 FRP-混凝土粘结强度 τu。
 - **调参方法**：所有模型均使用 Optuna 的 **TPE（Tree-structured Parzen Estimator）** 采样器进行超参数优化。
-- **对比模型**：BayesianRidge、DecisionTree、ELM、kNN、LightGBM、MLP、RF、SVR、XGBoost、CatBoost、GBR、Stacking、TabM、TabPFN、xRFM 等。
+- **对比模型**（共 12 个）：单体模型 BayesianRidge、DecisionTree、ELM、kNN、MLP、SVR、TabPFN、xRFM；集成模型 RF、LightGBM、XGBoost、TabM。
 - **数据**：`database2.xlsx`（318 组海洋环境 FRP-混凝土粘结试验数据，未入库，请参见论文）。
 - **在线预测**：`ui2.py` 提供 Gradio 交互界面，支持 BayesianRidge / DecisionTree / ELM / MLP / kNN / SVR / TabPFN / xRFM 共 8 个模型的一键推理。
 
 ## 项目功能
 
-- **算法比较**：包含多种主流机器学习算法（如 CatBoost、决策树、KNN、LightGBM、随机森林、SVR 等）的实现与调参。
+- **算法比较**：包含多种主流机器学习算法（如决策树、KNN、LightGBM、随机森林、SVR、xRFM、TabPFN、TabM 等）的实现与调参。
 - **自动调参**：使用 Optuna 进行自动化超参数优化，提高模型性能。
 - **SHAP 可视化**：支持模型可解释性分析，包含 SHAP 值的多种可视化方法。
 - **数据预处理**：提供标准化、编码、特征分析等常用预处理功能。
@@ -28,27 +28,25 @@
 ## 文件说明
 
 - **不同机器学习模型的实现文件，包含调参函数 `objective`**：
-  - `CatBoost.py`：CatBoost 回归模型实现
   - `DT.py`：决策树回归模型实现
   - `KNN.py`：K近邻回归模型实现
   - `LightGBM-optuna.py`：LightGBM 回归模型实现（使用 Optuna 调参）
   - `RF.py`：随机森林回归模型实现
   - `SVR.py`：支持向量回归模型实现
-  - `GBR.py`：梯度提升回归模型实现
   - `MLP.py`：多层感知器回归模型实现
   - `elm.py`：极限学习机回归模型实现
   - `xrfm_reg.py`：xRFM 回归模型实现
-  - `tabm_reg.py`：TabM 回归模型实现
+  - `tabm_reg.py`：TabM 回归模型实现（依赖 `tabm_model_tool.py`）
   - `tabpfn_reg.py`：TabPFN 回归模型实现
   - `bay.py`：贝叶斯回归模型实现
-- `corr.py`：用于分析数据集特征之间的相关性，包括连续变量、离散变量和多共线性分析。
 - `tools.py`：提供多种可视化和预处理工具函数，如数据标准化、SHAP 可视化、残差图绘制等。
 - `paras_read.py`：用于提取最优模型参数。
 - `encode.py`：对数据集中的分类变量进行编码。
-- `ui.py`：旧版（UHPC 数据集）预测界面。
 - `ui2.py`：海洋环境数据集（database2）多模型预测界面，本分支主要维护的推理入口。
 - `rebuild_ui_models.py`：一次性重建脚本，为 `ui2.py` 补齐 BayesianRidge / DecisionTree / ELM / MLP / kNN / SVR 的推理产物（`savemodel/*2/ui_*.pkl`）。
+- `tabm_model_tool.py`：TabM 训练辅助工具（模型与配置封装）。
 - `result/`, `savemodel/`：用于保存模型结果和训练完成的模型（均已加入 `.gitignore`，不入库）。
+- 未用于本论文的旧版/作图脚本（CatBoost、GBR、Stacking、XGBoost-mealpy、旧版 ui、corr/dataplot/distributeplot/runall 等）已移至本地 `unused/` 文件夹，不入库。
 
 ## 依赖库
 
@@ -56,7 +54,7 @@
 建议优先使用uv进行环境管理
 
 ```bash
-pip install optuna scikit-learn pandas numpy matplotlib seaborn lightgbm catboost shap
+pip install optuna scikit-learn pandas numpy matplotlib seaborn lightgbm xgboost shap
 ```
 
 TabM / TabPFN / xRFM / ELM 等模型还需要：
@@ -72,7 +70,6 @@ pip install tabpfn tabpfn-extensions rtdl-revisiting-models xrfm hpelm torch
 3. **重建推理产物**：运行 `python rebuild_ui_models.py`，生成 `ui2.py` 所需的 `ui_model.pkl / ui_encoder.pkl / ui_scaler.pkl`（ELM 为 `ui_model.lm`）。
 4. **启动预测界面**：`python ui2.py`，在浏览器中选择模型并输入参数，即可预测粘结强度。
 5. **分析结果**：使用 `paras_read.py` 提取最优参数，使用 `tools.py` 中的函数进行可视化分析。
-6. **相关性分析**：运行 `corr.py` 以分析数据集中特征之间的关系。
 
 ## 参考
 
