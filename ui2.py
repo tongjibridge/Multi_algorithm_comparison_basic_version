@@ -281,6 +281,8 @@ with gr.Blocks(
                     info="Select FRP fiber type",
                 )
 
+                # 源数据中 "SW+RB "（尾部多空格）与 "SW+RB" 是两个类别，
+                # 界面上合并为一项；编码器按 "SW+RB" 映射
                 jin_surface = gr.Radio(
                     choices=[
                         "SC+SW",
@@ -290,7 +292,6 @@ with gr.Blocks(
                         "SW+RB+SC",
                         "SW+SC",
                         "SC",
-                        "SW+RB ",
                     ],
                     label="FRP fiber surface type",
                     value="SC+SW",
@@ -300,27 +301,28 @@ with gr.Blocks(
                     label="Concrete compressive strength fcu (MPa)",
                     value=70.0,
                     minimum=0,
-                    info="Input concrete compressive strength fcu (MPa)",
+                    info="Input fcu (MPa), data range: 29.3-84.1",
                 )
                 fiber_E = gr.Number(
                     label="Elastic modulus of FRP fiber (GPa)",
                     value=50.0,
                     minimum=0,
-                    info="Elastic modulus of FRP fiber (GPa)",
+                    info="Elastic modulus (GPa), data range: 38.1-170.0",
                 )
         with gr.Column():
             with gr.Group():
+                # 数值输入的 data range 提示取自 database2.xlsx（318 组）的上下限
                 pro_time = gr.Number(
                     label="Exposure time(days)",
                     value=30,
                     minimum=0,
-                    info="Input exposure time(days)",
+                    info="Input exposure time (days), data range: 15-270",
                 )
                 temperature = gr.Number(
                     label="Temperature (℃)",
                     value=60.0,
                     minimum=0,
-                    info="Input temperature (℃)",
+                    info="Input temperature (℃), data range: 20-80",
                 )
 
                 with gr.Row():
@@ -328,20 +330,20 @@ with gr.Blocks(
                         label="diameter",
                         value=12.0,
                         minimum=0,
-                        info="diameter",
+                        info="diameter (mm), data range: 8-16",
                     )
                     bond_lenth = gr.Number(
                         label="Bond length",
                         value=60.0,
                         minimum=0,
-                        info="Bond length",
+                        info="Bond length (mm), data range: 15-93",
                     )
 
                 cover_ratio = gr.Number(
                     label="Cover thickness",
                     value=94,
                     minimum=0,
-                    info="Cover thickness",
+                    info="Cover thickness (mm), data range: 46-95",
                 )
 
     with gr.Row(scale=1):
